@@ -11,7 +11,7 @@
 | 项 | 内容 |
 |---|---|
 | 产品 | 一行命令把 Excel/CSV + 业务需求变成单文件 HTML 大屏 |
-| 亮点 | **不需要 API Key**，不需要数据库，不需要服务器，不需要联网 |
+| 亮点 | **用你自己的 AI 订阅**，不需要数据库，不需要服务器，不需要联网 |
 | 仓库 | `github.com/{你}/vizagent-dashboard` |
 | 目录 | **本仓库下的 `skill/` 目录**（与 SaaS 主项目完全物理隔离） |
 | 架构 | **双模式单编译内核**：Agent Skill（宿主 LLM） + CLI（离线） |
@@ -70,10 +70,11 @@ flowchart LR
 
 ### 两种模式
 
-| 模式 | 调用方 | Planner | 是否需要 LLM Key |
+| 模式 | 调用方 | Planner | LLM 算力由谁承担 |
 |---|---|---|---|
-| **Agent Skill（默认）** | Claude / Codex / 任意 AI | 宿主 Agent 按 Schema 生成 DashboardSpec | ❌ 不需要（用宿主自身的推理能力） |
-| **CLI / Python** | 终端 / CI / 二次开发 | 用户直接写 DashboardSpec 或配外部 Planner | ❌ 默认不需要 / 🟡 仅当指定 `--planner` 时需要 |
+| **Agent Skill（默认）** | Claude / Codex / 任意 AI | 宿主 Agent 按 Schema 生成 DashboardSpec | **用户自己的 AI 订阅**（宿主推理，无需额外配 Key） |
+| **CLI — Spec 模式** | 终端 / CI / 二次开发 | 用户直接写 DashboardSpec | **无需 LLM**（编译器确定性编译，零 API 调用） |
+| **CLI — Planner 模式** | 终端 / CI | 外部 LLM（openai-compatible） | **用户自配 Key**（`vizagent config --set api_key=...`） |
 
 ### 核心接口
 
@@ -158,7 +159,7 @@ skill/
 ┌─────────────────────────────────────────────────────┐
 │ ⭐ vizagent-dashboard                                │
 │ Turn business requirements into HTML dashboards     │
-│              — No API key required —                 │
+│           — Use your own AI —           │
 │                                                     │
 │ [CI] [License] [PyPI] [Python 3.10-3.12]            │
 │                                                     │
@@ -170,7 +171,7 @@ skill/
 │ pip install vizagent-dashboard                      │
 │ vizagent build --data data.xlsx --output dashboard/ │
 │                                                     │
-│ No API key. No database. No server.                 │
+│ No database. No server. Just one HTML file.                 │
 │ Just one HTML file.                                 │
 └─────────────────────────────────────────────────────┘
 ```
@@ -185,12 +186,12 @@ skill/
 ```
 dashboard, data-visualization, echarts, ai, llm,
 agent-skill, claude-code, data-analysis, business-intelligence,
-python, csv, xlsx, no-api-key, html-report, monitoring
+python, csv, xlsx, html-report, monitoring
 ```
 
 **README 关键词自然嵌入**：
 - "Turn business requirements into HTML dashboards"
-- "No API key required"
+- "Use your own AI — no hidden API bills"
 - "Build and validate standalone HTML data dashboards"
 - "Works with or without an LLM"
 
@@ -198,7 +199,7 @@ python, csv, xlsx, no-api-key, html-report, monitoring
 
 | 渠道 | 时机 | 内容重点 |
 |---|---|---|
-| **Hacker News** (Show HN) | 发布当天 9:00 ET | GIF + "No API key required" 钩子 |
+| **Hacker News** (Show HN) | 发布当天 9:00 ET | GIF + "Use your own AI" 钩子 |
 | **Reddit** r/MachineLearning + r/Python + r/dataisbeautiful | 发布当天 | 技术实现 + 演示效果 |
 | **V2EX** | 发布当天 | 中文版：一行命令出大屏 |
 | **掘金** | 发布当天 | 中文技术教程：原理 + 源码 |
@@ -375,7 +376,7 @@ tools/upstream-manifest.toml
 | 许可证 | Apache 2.0 |
 | 主题 | midnight-ops / paper-brief / warm-editorial（重新创作） |
 | 首发时间线 | 4 周 v0.1.0 |
-| README | 第一屏 GIF + 无 API Key + 30 秒跑通 |
+| README | 第一屏 GIF + 用你自己 AI + 30 秒跑通 |
 | 安全 | 首发两层（HTML 转义 + 路径 + 大小限制），其余延后 |
 | SaaS 关系 | 完全隔离，不双向同步 |
 

@@ -1,13 +1,13 @@
 ---
 name: vizagent-dashboard
-description: Turn business requirements into standalone HTML dashboards — No API key required
+description: Turn business requirements into standalone HTML dashboards — use your own AI
 author: VizAgent Team
 version: 0.1.0
 ---
 
 # vizagent-dashboard
 
-Generate professional HTML data dashboards from CSV/Excel files with natural language requirements. No API key, no database, no server — just one HTML file.
+Generate professional HTML data dashboards from CSV/Excel files with natural language requirements. Uses **your** AI subscription — no hidden API bills, no free-riding on someone else's credits.
 
 ## When to use
 
@@ -16,9 +16,17 @@ Generate professional HTML data dashboards from CSV/Excel files with natural lan
 - You want to embed dashboards in reports, emails, or static sites
 - You're building an AI agent that needs data visualization capability
 
+## API key model
+
+| Mode | API Key needed? |
+|------|----------------|
+| **Agent Skill** (Claude/Codex) | Uses your host AI's reasoning — **you're already paying for it**. No separate key to configure. |
+| **CLI — Spec mode** (`--spec`) | **No API key needed** — compiler is deterministic, zero LLM calls. |
+| **CLI — Planner mode** (`--requirement`) | 🟡 **Configure your own key** via `vizagent config --set api_key=...` or `--planner` flag. |
+
 ## Skill configuration
 
-No API key or external service configuration required. The skill uses the host AI's native reasoning.
+In Agent Skill mode, no API key configuration is required — the skill uses your host AI's native reasoning.
 
 ### Optional parameters
 
@@ -42,14 +50,14 @@ A data file (CSV or Excel) and optionally a business requirement in natural lang
 Use the `vizagent` CLI:
 
 ```bash
-# With business requirement
+# With business requirement (uses your LLM key if configured)
 vizagent build \
   --data {data_path} \
   --requirement "{user_requirement}" \
   --output {output_path}
 
-# Auto-detect (data-focused)
-vizagent build --data {data_path} --output {output_path}
+# Spec mode — zero API cost
+vizagent build --data {data_path} --spec spec.json --output {output_path}
 ```
 
 ### Step 4: Present the result
@@ -58,7 +66,7 @@ Open the generated HTML file and present it to the user, or provide the path.
 
 ## DashboardSpec format
 
-When you need fine-grained control, provide a `--spec` parameter with a structured dashboard specification:
+When you need fine-grained control and zero API cost, provide a `--spec` parameter:
 
 ```json
 {

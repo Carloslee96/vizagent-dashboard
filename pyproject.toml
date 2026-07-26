@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "vizagent-dashboard"
 version = "0.1.0"
-description = "Turn business requirements into standalone HTML dashboards — No API key required"
+description = "Turn business requirements into HTML dashboards — use your own AI. BYO API key or use spec mode with zero API calls."
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
