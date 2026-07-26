@@ -16,11 +16,12 @@
 | 资产 | 版本 | 许可证 | 来源 |
 |---|---|---|---|
 | Apache ECharts | 5.5.1 | Apache-2.0 | https://github.com/apache/echarts |
-| china.json (GeoJSON) | — | **待复核** | 阿里云 DataV.GeoAtlas / Apache ECharts map data |
-| world.json (GeoJSON) | — | **待复核** | 阿里云 DataV.GeoAtlas / Apache ECharts map data |
+| china.json (GeoJSON) | echarts@4.9.0 | Apache-2.0 | npm `echarts@4.9.0` `map/json/china.json`，逐字节一致 |
+| world.json (GeoJSON) | echarts@4.9.0 | Apache-2.0 | npm `echarts@4.9.0` `map/json/world.json`，逐字节一致 |
 
-> 两份 GeoJSON 在历史提取中来源记录不一致。**公开发布前必须确认实际来源
-> 与可再分发许可**，并据此更新本表与 NOTICE。在此完成前不得打 v0.1.0 标签。
+> 许可结论（2026-07-27 核实）：两份 GeoJSON 均来自 Apache ECharts 4.9.0
+> （Apache 2.0），与 npm 包对应文件逐字节一致，可再分发。china.json 底层
+> 边界数据 ECharts 历史源自 Natural Earth（公共领域）。
 
 ## 3. 运行时依赖（声明于 pyproject.toml，安装时拉取，不分发）
 

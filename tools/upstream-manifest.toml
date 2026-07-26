@@ -73,7 +73,7 @@ aliases = [
   "command-post/amber-console -> signal-dark",
 ]
 
-# ── 随包分发资产（vendor/）：来源与许可证，发布前需复核 ──
+# ── 随包分发资产（vendor/）：来源与许可证，2026-07-27 已逐字节核实 ──
 
 [[vendored]]
 file = "src/vizagent_dashboard/vendor/echarts.min.js"
@@ -84,18 +84,18 @@ note = "Apache ECharts 运行时，内嵌以支持离线渲染"
 
 [[vendored]]
 file = "src/vizagent_dashboard/vendor/china.json"
-license = "待复核"
-candidate_sources = [
-  "阿里云 DataV.GeoAtlas（开放许可，设计文档原定来源）",
-  "Apache ECharts map data",
-]
-note = "发布前必须确认实际来源与可再分发许可，写入 NOTICE 与 SBOM"
+license = "Apache-2.0"
+source = "npm echarts@4.9.0, map/json/china.json"
+url = "https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/china.json"
+sha256 = "d392f651a48e6213c9bfc83f406711069de296c17f426cffc0ad1148078ee226"
+size = 61248
+note = "与 echarts@4.9.0 逐字节一致；ECharts 压缩格式(UTF8Encoding=true)；底层边界源自 Natural Earth(公共领域)"
 
 [[vendored]]
 file = "src/vizagent_dashboard/vendor/world.json"
-license = "待复核"
-candidate_sources = [
-  "阿里云 DataV.GeoAtlas（开放许可）",
-  "Apache ECharts map data",
-]
-note = "同 china.json，发布前需复核"
+license = "Apache-2.0"
+source = "npm echarts@4.9.0, map/json/world.json"
+url = "https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json"
+sha256 = "049b334579e5a42d5d16c72d014d380e048e39fc1504049f212acb589484d2fa"
+size = 1010239
+note = "与 echarts@4.9.0 逐字节一致"
