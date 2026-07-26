@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+defaults:
+  run:
+    working-directory: skill
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install build
+      - run: python -m build
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: skill/dist/*
+          generate_release_notes: true
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: skill/dist/

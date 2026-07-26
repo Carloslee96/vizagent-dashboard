@@ -1,0 +1,40 @@
+# Upstream manifest — source commit + hash for audit
+# This file lists SaaS source files to be extracted into skill/src/vizagent_dashboard/
+# Run: python tools/import_from_vizagent.py
+
+extracted_at = ""
+
+[[extract]]
+path = "skeleton.py"
+target = "compiler/skeleton.py"
+commit = ""
+
+[[extract]]
+path = "chart_options.py"
+target = "compiler/chart_options.py"
+commit = ""
+
+[[extract]]
+path = "kpi_options.py"
+target = "compiler/kpi_options.py"
+commit = ""
+
+[[extract]]
+path = "design_loader.py"
+target = "compiler/themes.py"
+commit = ""
+
+[[extract]]
+path = "schemas.py"
+target = "schemas/dashboard_spec.py"
+commit = ""
+
+[[extract]]
+path = "quality.py"
+target = "validation/static.py"
+commit = ""
+
+[[extract]]
+path = "chart_registry.py"
+target = "compiler/chart_registry.py"
+commit = ""
