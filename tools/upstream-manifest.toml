@@ -38,3 +38,87 @@ commit = ""
 path = "chart_registry.py"
 target = "compiler/chart_registry.py"
 commit = ""
+
+# Theme markdown files (renamed to drop brand names)
+# Source: viz-agent-team/backend/agents/design-systems/*.md
+# Target: skill/src/vizagent_dashboard/assets/<theme_name>.md
+
+[[theme]]
+source = "airbnb.md"
+target = "cozy-retreat.md"
+
+[[theme]]
+source = "apple.md"
+target = "clean-slate.md"
+
+[[theme]]
+source = "claude.md"
+target = "paper-linen.md"
+
+[[theme]]
+source = "coinbase.md"
+target = "crypto-sleek.md"
+
+[[theme]]
+source = "figma.md"
+target = "design-toolkit.md"
+
+[[theme]]
+source = "grafana-ops.md"
+target = "monitor-dark.md"
+
+[[theme]]
+source = "health-ring.md"
+target = "fitness-glass.md"
+
+[[theme]]
+source = "kraken.md"
+target = "ocean-night.md"
+
+[[theme]]
+source = "linear.md"
+target = "minimal-tracker.md"
+
+[[theme]]
+source = "newsroom.md"
+target = "warm-editorial.md"
+
+[[theme]]
+source = "notion.md"
+target = "minimal-doc.md"
+
+[[theme]]
+source = "palantir.md"
+target = "command-post.md"
+
+[[theme]]
+source = "pitchbook-dark.md"
+target = "deal-room.md"
+
+[[theme]]
+source = "posthog.md"
+target = "growth-analytics.md"
+
+[[theme]]
+source = "sentry.md"
+target = "error-monitor.md"
+
+[[theme]]
+source = "spotify.md"
+target = "vibe-night.md"
+
+[[theme]]
+source = "stripe.md"
+target = "checkout-light.md"
+
+[[theme]]
+source = "supabase.md"
+target = "open-table.md"
+
+[[theme]]
+source = "terminal-amber.md"
+target = "amber-console.md"
+
+[[theme]]
+source = "vercel.md"
+target = "deploy-light.md"

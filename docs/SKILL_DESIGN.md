@@ -11,7 +11,7 @@
 | 项 | 内容 |
 |---|---|
 | 产品 | 一行命令把 Excel/CSV + 业务需求变成单文件 HTML 大屏 |
-| 亮点 | **用你自己的 AI 订阅**，不需要数据库，不需要服务器，不需要联网 |
+| 亮点 | **用你自己的 AI 订阅**，**20+ 预置主题**，不需要数据库，不需要服务器，不需要联网 |
 | 仓库 | `github.com/{你}/vizagent-dashboard` |
 | 目录 | **本仓库下的 `skill/` 目录**（与 SaaS 主项目完全物理隔离） |
 | 架构 | **双模式单编译内核**：Agent Skill（宿主 LLM） + CLI（离线） |
@@ -116,10 +116,27 @@ skill/
 │   ├── validation/        # 质量门禁
 │   │   ├── static.py      # 静态检查（截断/覆盖/溢出）
 │   │   └── browser.py     # 浏览器检查（Playwright，可选）
-│   └── assets/            # 主题 md + GeoJSON 引用
-│       ├── midnight-ops.md
-│       ├── paper-brief.md
-│       └── warm-editorial.md
+│   └── assets/            # 主题 md + GeoJSON 引用（20+ 主题去品牌命名）
+│       ├── paper-linen.md        # 暖纸衬线人文风
+│       ├── minimal-doc.md        # 温暖纸感文档风
+│       ├── command-post.md       # 冷峻指挥中心风
+│       ├── fitness-glass.md      # 健康玻璃环风
+│       ├── warm-editorial.md     # 暖色调新闻室风
+│       ├── monitor-dark.md       # 暗色运维监控风
+│       ├── cozy-retreat.md       # 温暖舒适旅行风
+│       ├── clean-slate.md        # 简洁亮色科技风
+│       ├── design-toolkit.md     # 设计师工具风
+│       ├── vibe-night.md         # 音乐暗色律动风
+│       ├── crypto-sleek.md       # 深色金融科技风
+│       ├── checkout-light.md     # 亮色支付简洁风
+│       ├── minimal-tracker.md    # 极简项目管理风
+│       ├── ocean-night.md        # 深海暗色风
+│       ├── error-monitor.md      # 错误监控暗色风
+│       ├── growth-analytics.md   # 产品数据分析风
+│       ├── deal-room.md          # 金融暗色交易风
+│       ├── open-table.md         # 开源数据暗色风
+│       ├── amber-console.md      # 琥珀色复古终端风
+│       └── deploy-light.md       # 亮色部署极简风
 │
 ├── tools/
 │   ├── import_from_vizagent.py   # 一次性提取 SaaS 核心代码
@@ -176,7 +193,9 @@ skill/
 └─────────────────────────────────────────────────────┘
 ```
 
-**第二屏**：3 个示例缩略图 + 一句话说明
+**第二屏**：主题画廊墙（20+ 主题缩略图矩阵）
+**第三屏**：3 个示例缩略图 + 一句话说明
+**第四屏**：安装 → 快速开始（5 行命令）
 **第三屏**：安装 → 快速开始（5 行命令）
 **后续**：Features / Architecture / Contributing / License
 
@@ -218,6 +237,28 @@ python, csv, xlsx, html-report, monitoring
 ```
 
 录制工具：Playwright（`tests/browser/` 已集成）→ ffmpeg 转 GIF。
+
+### 4.5 主题画廊（⭐ 第二屏吸睛利器）
+
+**20+ 预置主题矩阵**，每种截图做成缩略图，平铺在 README 第二屏：
+
+| 主题名 | 风格 | 来源灵感 |
+|--------|------|---------|
+| `paper-linen` | 暖纸衬线人文风 | 暖色纸面 + 陶土橙 + 衬线字 |
+| `minimal-doc` | 温暖纸感文档风 | 浅色、纸感、反科技感 |
+| `command-post` | 冷峻指挥中心风 | 近黑背景 + 单色蓝阶 |
+| `fitness-glass` | 健康玻璃环风 | 毛玻璃 + 身份色环 |
+| `warm-editorial` | 暖色调新闻室风 | 新闻室暖色编辑风 |
+| `monitor-dark` | 暗色运维监控风 | Grafana 风格暗色运维 |
+| `cozy-retreat` | 温暖舒适旅行风 | Airbnb 暖棕色系 |
+| `clean-slate` | 简洁亮色科技风 | Apple 简洁亮色风 |
+| `design-toolkit` | 设计师工具风 | Figma 灵感设计工具风 |
+| `vibe-night` | 音乐暗色律动风 | Spotify 暗色音乐风 |
+| ...另有 10 个主题省略 |
+
+**对 Star 的价值**：主题墙在 README 第二屏形成视觉冲击——用户滚动到这里看到 20+ 风格各异的大屏截图，直接产生"想试试"的冲动。这是决定 star 的第二关键触点（第一是 GIF）。
+
+主题数量本身也是 SEO 关键词（"20+ built-in themes"）。
 
 ---
 

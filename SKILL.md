@@ -97,11 +97,31 @@ When you need fine-grained control and zero API cost, provide a `--spec` paramet
 
 ## Themes
 
+20+ built-in themes. Pick one that matches your story:
+
 | Theme | Vibe | Best for |
 |-------|------|----------|
-| `midnight-ops` | Dark, technical, glowing accents | Operations, monitoring, tech demos |
-| `paper-brief` | Light, clean, print-friendly | Reports, presentations, PDF export |
-| `warm-editorial` | Warm, editorial, story-driven | Newsrooms, content analytics, publishing |
+| `midnight-ops` (default) | Dark, technical, glowing accents | Operations, monitoring, tech demos |
+| `paper-linen` | 暖纸衬线人文风 | 排版精良的报告、人文叙事 |
+| `minimal-doc` | 温暖纸感文档风 | 文档型仪表盘 |
+| `command-post` | 冷峻指挥中心风 | 运营监控、情报终端 |
+| `fitness-glass` | 健康玻璃环风 | 消费级数据环、健康指标 |
+| `warm-editorial` | 暖色调新闻室风 | 内容分析、媒体故事 |
+| `monitor-dark` | 暗色运维监控风 | Grafana 风运维仪表盘 |
+| `cozy-retreat` | 温暖舒适旅行风 | 暖棕色系的旅行/居家数据 |
+| `clean-slate` | 简洁亮色科技风 | 极简风格的科技仪表盘 |
+| `design-toolkit` | 设计师工具风 | 设计师审美的看板 |
+| `vibe-night` | 音乐暗色律动风 | 暗色音乐风格仪表盘 |
+| `crypto-sleek` | 深色金融科技风 | 加密资产、深色金融 |
+| `checkout-light` | 亮色支付简洁风 | 支付/电商亮色简洁风 |
+| `minimal-tracker` | 极简项目管理风 | 项目跟踪、看板 |
+| `ocean-night` | 深海暗色风 | 海洋/能源暗色仪表盘 |
+| `error-monitor` | 错误监控暗色风 | 错误日志监控 |
+| `growth-analytics` | 产品数据分析风 | 产品增长分析 |
+| `deal-room` | 金融暗色交易风 | 金融交易仪表盘 |
+| `open-table` | 开源数据暗色风 | 开源数据仪表盘 |
+| `amber-console` | 琥珀色复古终端风 | 复古终端风格的运维 |
+| `deploy-light` | 亮色部署极简风 | 部署流水/极简风 |
 
 ## Best practices
 
