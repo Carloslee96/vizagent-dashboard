@@ -31,13 +31,13 @@ def cli(ctx, verbose):
 @click.option("--spec", "spec_path", default=None, help="Path to DashboardSpec JSON file")
 @click.option("--theme", default="midnight-ops", help="Dashboard theme (see README §Themes)")
 @click.option("--output", default="./output", help="Output directory")
-@click.option("--open/--no-open", default=False, help="Open dashboard in browser after build")
-def build(data, requirement, spec_path, theme, output, open):
+@click.option("--open/--no-open", "open_browser", default=False, help="Open dashboard in browser after build")
+def build(data, requirement, spec_path, theme, output, open_browser):
     """Build a dashboard from data file and optional spec/requirement."""
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    click.echo(f"📊 Building dashboard from {data}...")
+    click.echo(f"[build] Building dashboard from {data}...")
     click.echo(f"   Theme: {theme}")
 
     # 1. 读取数据
@@ -56,7 +56,7 @@ def build(data, requirement, spec_path, theme, output, open):
                     excel_data.append(row_with_sheet)
         click.echo(f"   Data: {len(excel_data)} rows, {len(sheets)} sheet(s)")
     except Exception as e:
-        click.echo(f"❌ Failed to read data: {e}", err=True)
+        click.echo(f"[FAIL] Failed to read data: {e}", err=True)
         raise click.Abort()
 
     # 2. 加载或构造 DashboardSpec
@@ -67,7 +67,7 @@ def build(data, requirement, spec_path, theme, output, open):
             spec = DashboardSpec(**spec_data)
             click.echo(f"   Spec: loaded from {spec_path}")
         except Exception as e:
-            click.echo(f"❌ Failed to load spec: {e}", err=True)
+            click.echo(f"[FAIL] Failed to load spec: {e}", err=True)
             raise click.Abort()
     else:
         # 默认 spec：基于数据自动推断
@@ -83,12 +83,12 @@ def build(data, requirement, spec_path, theme, output, open):
             deployment_mode="cdn",
         )
     except Exception as e:
-        click.echo(f"❌ Compilation failed: {e}", err=True)
+        click.echo(f"[FAIL] Compilation failed: {e}", err=True)
         raise click.Abort()
 
     # 4. 验证
     report = validate_html(html_content)
-    click.echo(f"   Validation: {'✓ OK' if report['is_valid'] else '⚠ ' + str(len(report['issues'])) + ' issue(s)'}")
+    click.echo(f"   Validation: {'[OK] OK' if report['is_valid'] else '⚠ ' + str(len(report['issues'])) + ' issue(s)'}")
     if report["issues"]:
         for issue in report["issues"][:5]:
             click.echo(f"     - {issue}")
@@ -97,11 +97,11 @@ def build(data, requirement, spec_path, theme, output, open):
     output_file = output_path / "output.html"
     output_file.write_text(html_content, encoding="utf-8")
 
-    click.echo(f"✓ Dashboard generated → {output_file.absolute()}")
+    click.echo(f"[OK] Dashboard generated → {output_file.absolute()}")
     click.echo(f"   HTML: {report['html_length']} bytes")
     click.echo(f"   Charts: {report['chart_counts']}")
 
-    if open:
+    if open_browser:
         click.launch(str(output_file.absolute()))
 
 
