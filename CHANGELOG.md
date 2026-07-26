@@ -2,6 +2,15 @@
 
 ## [Unreleased] - 2026-07-27
 
+### 一键发布自动化
+
+- **仓库归属落定**：公开仓库为 `Carloslee96/vizagent-dashboard`（已存在、公开、空），采用根布局（`pyproject.toml`/`src/`/`README.md` 在根）。
+- **一键发布脚本**：新建 `tools/publish.sh`——自检（lint+测试+构建）→ `git subtree split` 拆 skill/ 为根布局 → 推送 main → 打 v0.1.0 tag 触发 release.yml。全程不碰 SaaS 代码。
+- **workflow 适配根布局**：ci.yml / security.yml / release.yml 移除 monorepo 专用的 `working-directory: skill` 与 `paths: ["skill/**"]`；dist 路径改为根 `dist/`。
+- **release.yml 用精修正文**：GitHub Release 正文改用 `docs/RELEASE_NOTES_v0.1.0.md`（`body_path`）。
+- **PyPI v0.1.0 暂停**：release.yml 的 PyPI step 注释掉，待 maintainer 在 pypi.org 做一次性 Trusted Publisher 登记后开启。
+- **仓库 URL 全局修正**：README / pyproject / SBOM / CONTRIBUTING / RELEASE_NOTES 里的 `vizagent/dashboard` 全部改为 `Carloslee96/vizagent-dashboard`，`cd skill/` 改为 `cd vizagent-dashboard`。
+
 ### 发布材料准备
 
 - **Release Notes**：新建 `docs/RELEASE_NOTES_v0.1.0.md`，精修的 GitHub Release 正文草稿（安装、上手、内容清单、已知限制、致谢）。

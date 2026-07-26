@@ -4,10 +4,6 @@ on:
   push:
     tags: ["v*"]
 
-defaults:
-  run:
-    working-directory: skill
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -24,9 +20,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: skill/dist/*
-          generate_release_notes: true
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: skill/dist/
+          files: dist/*
+          body_path: docs/RELEASE_NOTES_v0.1.0.md
+      # ── PyPI 发布（v0.1.0 暂停）─────────────────────────────────
+      # 首次发布到 PyPI 需先在 https://pypi.org 注册项目并把 GitHub 配为
+      # Trusted Publisher（一次性，需 maintainer 账号）。完成后再取消下方注释。
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1

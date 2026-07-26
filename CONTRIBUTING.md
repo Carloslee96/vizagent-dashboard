@@ -10,7 +10,7 @@ extraction script (`tools/import_from_vizagent.py`) with an updated
 ## Setup
 
 ```bash
-cd skill/
+cd vizagent-dashboard
 pip install -e ".[dev]"
 pip install -e ".[browser]"   # optional, for the Playwright gate
 python -m playwright install chromium

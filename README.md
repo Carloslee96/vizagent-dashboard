@@ -4,7 +4,7 @@
 
 **Turn business requirements into HTML dashboards — Use your own AI**
 
-[![CI](https://github.com/vizagent/dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/vizagent/dashboard/actions/workflows/ci.yml)
+[![CI](https://github.com/Carloslee96/vizagent-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Carloslee96/vizagent-dashboard/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/vizagent-dashboard)](https://pypi.org/project/vizagent-dashboard/)
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
@@ -239,8 +239,8 @@ The skill uses **your host AI's own reasoning** — you're already paying for yo
 
 ```bash
 # Clone
-git clone https://github.com/vizagent/dashboard.git
-cd skill/
+git clone https://github.com/Carloslee96/vizagent-dashboard.git
+cd vizagent-dashboard
 
 # Install in editable mode
 pip install -e ".[dev]"
@@ -263,7 +263,7 @@ Apache 2.0 © VizAgent Team. See [LICENSE](LICENSE).
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=vizagent/dashboard&type=Date)](https://star-history.com/#vizagent/dashboard&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Carloslee96/vizagent-dashboard&type=Date)](https://star-history.com/#Carloslee96/vizagent-dashboard&Date)
 
 ---
 
@@ -271,7 +271,7 @@ Apache 2.0 © VizAgent Team. See [LICENSE](LICENSE).
   <b>No database. No server. Just one HTML file.<br>
   You bring your data and your AI subscription — we do the rest.</b>
   <br><br>
-  <a href="https://github.com/vizagent/dashboard/stargazers">
-    <img src="https://img.shields.io/github/stars/vizagent/dashboard?style=social" alt="stars">
+  <a href="https://github.com/Carloslee96/vizagent-dashboard/stargazers">
+    <img src="https://img.shields.io/github/stars/Carloslee96/vizagent-dashboard?style=social" alt="stars">
   </a>
 </div>

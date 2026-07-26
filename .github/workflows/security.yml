@@ -3,13 +3,8 @@ name: Security
 on:
   push:
     branches: [main]
-    paths: ["skill/**"]
   schedule:
     - cron: "0 9 * * 1"  # Every Monday
-
-defaults:
-  run:
-    working-directory: skill
 
 jobs:
   audit:

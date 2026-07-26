@@ -9,7 +9,7 @@
 | 名称 | vizagent-dashboard |
 | 版本 | 0.1.0 |
 | 许可证 | Apache-2.0 |
-| 主页 | https://github.com/vizagent/dashboard |
+| 主页 | https://github.com/Carloslee96/vizagent-dashboard |
 
 ## 2. 随包分发资产（写入 wheel，进入产物 HTML）
 

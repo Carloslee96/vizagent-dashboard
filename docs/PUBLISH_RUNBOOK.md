@@ -3,6 +3,29 @@
 > 面向 maintainer 的发布流程。读完这份，你应该能独立完成从「本地提交」到
 > 「GitHub 上出现 Release」的全过程。每一步都写了「这步在干嘛」和「怎么确认做完了」。
 
+## 🚀 快速路径（推荐）
+
+不想懂细节？只需在 monorepo 任意目录跑一条命令：
+
+```bash
+bash skill/tools/publish.sh
+```
+
+它会自动完成：自检（lint+测试+构建）→ 拆分 skill/ 为根布局 → 推送到公开仓库
+`Carloslee96/vizagent-dashboard` → 打 `v0.1.0` tag → 触发 GitHub Actions 自动建 Release。
+
+**唯一需要你操作的一步**：首次推送时浏览器可能弹出 GitHub 登录授权，点一下即可。
+（这台机器没有配置 GitHub 凭证，所以推送这一下必须由你来完成授权。）
+
+跑完之后看：
+- 构建进度：https://github.com/Carloslee96/vizagent-dashboard/actions
+- Release：https://github.com/Carloslee96/vizagent-dashboard/releases
+
+下面各节是脚本背后原理的展开，供排错或手动操作参考。
+
+---
+
+
 ## 0. 先搞清楚三个概念
 
 很多人混「提交」「推送」「发布」，这里一次说清：

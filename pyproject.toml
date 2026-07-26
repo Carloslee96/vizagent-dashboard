@@ -43,8 +43,8 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/vizagent/dashboard"
-Source = "https://github.com/vizagent/dashboard"
+Homepage = "https://github.com/Carloslee96/vizagent-dashboard"
+Source = "https://github.com/Carloslee96/vizagent-dashboard"
 
 [project.scripts]
 vizagent = "vizagent_dashboard.cli:main"

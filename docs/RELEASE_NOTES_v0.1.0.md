@@ -73,8 +73,8 @@ vizagent build --data sales.xlsx --spec spec.json --output dashboard/
 ## 验证
 
 ```bash
-git clone https://github.com/vizagent/dashboard.git
-cd skill
+git clone https://github.com/Carloslee96/vizagent-dashboard.git
+cd vizagent-dashboard
 pip install -e ".[dev]"
 python -m pytest tests/ -q -k "not e2e and not real"
 ```
