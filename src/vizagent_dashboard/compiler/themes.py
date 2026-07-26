@@ -146,23 +146,35 @@ def resolve_theme_id(id_or_name: Optional[str]) -> str:
 def load_theme(theme_id: str) -> str:
     """加载指定设计系统的完整 .md 内容。
 
+    支持主题别名（向后兼容旧名称）：
+    - midnight-ops → monitor-dark
+    - paper-brief → minimal-doc（接近）
+
     Args:
         theme_id: 设计系统 ID（文件名去掉 .md），如 "paper-linen"
 
     Returns:
         设计系统 Markdown 内容，未找到返回空字符串
     """
-    if theme_id in _cache:
-        return _cache[theme_id]
+    # 主题别名映射（兼容旧名称）
+    ALIASES = {
+        "midnight-ops": "monitor-dark",
+        "paper-brief": "minimal-doc",
+        "dark-ops": "monitor-dark",
+    }
+    resolved = ALIASES.get(theme_id, theme_id)
 
-    filepath = _ASSETS_DIR / f"{theme_id}.md"
+    if resolved in _cache:
+        return _cache[resolved]
+
+    filepath = _ASSETS_DIR / f"{resolved}.md"
     if not filepath.is_file():
         return ""
 
     with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
-    _cache[theme_id] = content
+    _cache[resolved] = content
     return content
 
 
