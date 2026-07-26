@@ -1,17 +1,17 @@
 """主题加载测试 — themes.py。
 
-覆盖：
-- 所有 20 个主题文件存在、可加载
-- load_theme 别名
+覆盖（5 个 clean-room 通用主题）：
+- 所有主题文件存在、可加载、含必要章节
+- load_theme 别名（旧 ID 兼容映射到新主题）
 - list_themes 返回完整列表
 - theme_display_name / resolve_theme_id
+- build_design_context
 """
 
 from __future__ import annotations
 
-import pytest
-
 from vizagent_dashboard.compiler.themes import (
+    THEME_IDS,
     list_themes,
     load_theme,
     theme_display_name,
@@ -22,39 +22,45 @@ from vizagent_dashboard.compiler.themes import (
 
 class TestLoadTheme:
     def test_known_theme_exists(self):
-        content = load_theme("paper-linen")
+        content = load_theme("midnight-ops")
         assert len(content) > 100
         assert "Color Palette" in content
-        assert "Typography" in content
+        assert "Chart Color Palette" in content
+        assert "Visual Theme" in content
 
-    def test_all_20_themes_loadable(self, known_themes):
-        """所有 20 个主题文件必须能加载且包含必要章节。"""
-        required_sections = ["Color Palette", "Typography", "Visual Theme"]
+    def test_all_themes_loadable(self, known_themes):
+        """所有主题文件必须能加载且包含必要章节。"""
+        required_sections = ["Color Palette", "Chart Color Palette", "Visual Theme"]
         for tid in known_themes:
             content = load_theme(tid)
             assert content, f"Theme {tid} not loaded"
             for section in required_sections:
                 assert section in content, f"Theme {tid} missing section: {section}"
 
+    def test_theme_ids_constant_matches_fixtures(self, known_themes):
+        assert set(THEME_IDS) == set(known_themes)
+
     def test_unknown_theme_returns_empty(self):
         assert load_theme("nonexistent-theme-xyz") == ""
 
-    def test_alias_midnight_ops(self):
-        """midnight-ops → monitor-dark。"""
-        alias = load_theme("midnight-ops")
-        direct = load_theme("monitor-dark")
-        assert alias == direct
+    def test_alias_monitor_dark_to_midnight_ops(self):
+        """旧 ID monitor-dark → midnight-ops。"""
+        assert load_theme("monitor-dark") == load_theme("midnight-ops")
 
-    def test_alias_paper_brief(self):
-        alias = load_theme("paper-brief")
-        direct = load_theme("minimal-doc")
-        assert alias == direct
+    def test_alias_paper_brief_to_paper_light(self):
+        assert load_theme("paper-brief") == load_theme("paper-light")
+
+    def test_alias_paper_linen_to_paper_light(self):
+        assert load_theme("paper-linen") == load_theme("paper-light")
+
+    def test_alias_command_post_to_signal_dark(self):
+        assert load_theme("command-post") == load_theme("signal-dark")
 
 
 class TestListThemes:
-    def test_returns_20_themes(self):
+    def test_returns_five_themes(self):
         themes = list_themes()
-        assert len(themes) >= 20
+        assert len(themes) == 5
 
     def test_each_theme_has_required_fields(self):
         for t in list_themes():
@@ -84,7 +90,7 @@ class TestListThemes:
 
 class TestThemeDisplayName:
     def test_known_id(self):
-        name = theme_display_name("paper-linen")
+        name = theme_display_name("midnight-ops")
         assert isinstance(name, str)
         assert len(name) > 0
 
@@ -93,19 +99,22 @@ class TestThemeDisplayName:
         assert theme_display_name(None) == ""
 
     def test_alias_resolved(self):
-        """别名 midnight-ops 返回 monitor-dark 的显示名。"""
-        name = theme_display_name("midnight-ops")
-        assert isinstance(name, str) and len(name) > 0
+        """别名 monitor-dark 返回 midnight-ops 的显示名。"""
+        assert theme_display_name("monitor-dark") == theme_display_name("midnight-ops")
 
 
 class TestResolveThemeId:
     def test_by_id(self):
-        assert resolve_theme_id("paper-linen") == "paper-linen"
+        assert resolve_theme_id("midnight-ops") == "midnight-ops"
 
     def test_by_display_name(self):
-        name = theme_display_name("paper-linen")
+        name = theme_display_name("midnight-ops")
         resolved = resolve_theme_id(name)
-        assert resolved == "paper-linen"
+        assert resolved == "midnight-ops"
+
+    def test_alias_resolved(self):
+        assert resolve_theme_id("monitor-dark") == "midnight-ops"
+        assert resolve_theme_id("paper-linen") == "paper-light"
 
     def test_empty_input(self):
         assert resolve_theme_id("") == ""
@@ -114,16 +123,15 @@ class TestResolveThemeId:
 
 class TestBuildDesignContext:
     def test_known_theme_returns_context(self):
-        ctx = build_design_context("paper-linen")
-        assert "设计系统规范" in ctx
+        ctx = build_design_context("midnight-ops")
+        assert "按以下通用设计 token" in ctx
+        assert "不要复制第三方品牌" in ctx
         assert "Color Palette" in ctx
-        assert "Typography" in ctx
-        assert "Component Patterns" in ctx
 
     def test_none_returns_default(self):
         ctx = build_design_context(None)
-        assert "设计系统规范" in ctx
+        assert "按以下通用设计 token" in ctx
 
     def test_unknown_returns_default(self):
         ctx = build_design_context("nonexistent")
-        assert "设计系统规范" in ctx
+        assert "按以下通用设计 token" in ctx

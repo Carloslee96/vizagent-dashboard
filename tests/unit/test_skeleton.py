@@ -1,19 +1,18 @@
-"""编译管道端到端测试 — compile_dashboard 完整流程。
+"""编译管道端到端测试 — compile_artifacts / compile_dashboard 完整流程。
 
 覆盖：
 - 完整编译（spec + 数据 + 主题 → HTML）
 - KPI 聚合 sum
 - 空数据
-- 主题别名
+- 主题别名（旧 ID → 新 clean-room 主题）
 - 图表面板标题显示
+- embedded / cdn 部署模式
 """
 
 from __future__ import annotations
 
 import json
 import re
-
-import pytest
 
 from vizagent_dashboard.compiler.skeleton import (
     compile_dashboard,
@@ -54,7 +53,7 @@ class TestBuildCSSBlock:
     def test_includes_body_styles(self, css_vars):
         css = build_css_block(css_vars)
         assert "body {" in css
-        assert "background-color" in css
+        assert "background:" in css  # 新 CSS 用 background 简写
 
     def test_includes_kpi_styles(self, css_vars):
         css = build_css_block(css_vars)
@@ -71,11 +70,11 @@ class TestBuildHTML:
             css_vars=css_vars,
             deployment_mode="cdn",
         )
-        assert "<!DOCTYPE html>" in html
+        assert "<!doctype html>" in html
         assert "测试仪表盘" in html
         assert "总销售额" in html
         assert "¥1,000" in html
-        assert "echarts" in html
+        assert "echarts" in html  # 运行时 JS 引用 echarts
 
     def test_chart_title_in_panel(self, css_vars):
         """面板标题应从 option JSON 提取。"""
@@ -95,19 +94,27 @@ class TestBuildHTML:
             '{"title": {"text": "C"}}',
         ]
         html = build_html("多图", chart_opts, [], css_vars)
-        assert "chart-panel-0" in html
-        assert "chart-panel-1" in html
-        assert "chart-panel-2" in html
+        assert "viz-chart-0" in html
+        assert "viz-chart-1" in html
+        assert "viz-chart-2" in html
 
     def test_csp_present(self, css_vars):
         html = build_html("安全", [], [], css_vars)
         assert "Content-Security-Policy" in html
 
-    def test_cdn_fallback(self, css_vars):
+    def test_cdn_mode_uses_single_cdn(self, css_vars):
+        """cdn 模式只引用 jsdelivr，不再使用多 CDN fallback。"""
         html = build_html("CDN", [], [], css_vars, deployment_mode="cdn")
-        assert "npmmirror.com" in html
-        assert "bootcdn.net" in html
         assert "jsdelivr.net" in html
+        assert "npmmirror.com" not in html
+        assert "bootcdn.net" not in html
+
+    def test_embedded_mode_inlines_runtime(self, css_vars):
+        """embedded 模式内嵌 echarts 运行时，无外部脚本。"""
+        html = build_html("离线", [], [], css_vars, deployment_mode="embedded")
+        assert "jsdelivr.net" not in html
+        assert re.search(r'<script[^>]+src=["\']https?://', html) is None
+        assert "echarts" in html  # 内嵌运行时
 
 
 class TestCompileDashboard:
@@ -129,10 +136,10 @@ class TestCompileDashboard:
         assert "750" in html
 
     def test_compile_with_real_data(self, ecommerce_data, ecommerce_spec):
-        """72 行真实数据 → 编译成功，验证 score=100。"""
+        """72 行真实数据 → 编译成功并通过新门禁（score=100）。"""
         html = compile_dashboard(spec=ecommerce_spec, excel_data=ecommerce_data)
         report = validate_html(html)
-        assert report["is_truncated"] is False
+        assert report["is_valid"] is True
         assert report["score"] == 100
         assert len(report["issues"]) == 0
 
@@ -159,28 +166,38 @@ class TestCompileDashboard:
         assert len(html) > 200
 
     def test_theme_aliases(self, mini_data, mini_spec):
-        """主题别名（midnight-ops→monitor-dark）生效。"""
-        html_alias = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id="midnight-ops")
-        html_direct = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id="monitor-dark")
-        # 两个应该完全一致（同主题文件）
+        """旧 ID 别名（monitor-dark → midnight-ops）生效，产物一致。"""
+        html_alias = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id="monitor-dark")
+        html_direct = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id="midnight-ops")
         assert html_alias == html_direct
 
     def test_different_themes_look_different(self, mini_data, mini_spec):
         """不同主题产生不同 CSS（色值不同）。"""
         html1 = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id="paper-linen")
         html2 = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id="monitor-dark")
-        # paper-linen 是暖色风，monitor-dark 是暗色风，CSS 变量值不同
+        # paper-linen→paper-light（暖纸），monitor-dark→midnight-ops（暗色），CSS 变量值不同
         assert html1 != html2
 
     def test_chart_count(self, ecommerce_data, ecommerce_spec):
-        """HTML 中应有 4 个 ECharts 初始化调用（line/pie/bar/scatter）。"""
+        """HTML 中应有 4 个 chart-container（line/pie/bar/scatter），KPI 不计入。"""
         html = compile_dashboard(spec=ecommerce_spec, excel_data=ecommerce_data)
-        # 统计 echarts.init 调用次数
-        init_calls = re.findall(r"echarts\.init\(", html)
-        assert len(init_calls) == 4
+        containers = re.findall(r'class="chart-container"', html)
+        assert len(containers) == 4
 
-    def test_deployment_local_mode(self, mini_data, mini_spec):
-        """local 模式没有 CDN 链接。"""
-        html = compile_dashboard(spec=mini_spec, excel_data=mini_data, deployment_mode="local")
-        assert "npmmirror.com" not in html
-        assert "assets/echarts.min.js" in html
+    def test_embedded_mode_offline(self, mini_data, mini_spec):
+        """embedded 模式无 CDN 链接、无外部脚本。"""
+        html = compile_dashboard(spec=mini_spec, excel_data=mini_data, deployment_mode="embedded")
+        assert "jsdelivr.net" not in html
+        assert re.search(r'<script[^>]+src=["\']https?://', html) is None
+
+    def test_build_manifest_embedded(self, ecommerce_data, ecommerce_spec):
+        """编译产物内嵌 build-manifest，含覆盖与图表计数。"""
+        html = compile_dashboard(spec=ecommerce_spec, excel_data=ecommerce_data)
+        match = re.search(
+            r'<script[^>]+id="vizagent-build-manifest"[^>]*>(.*?)</script>', html, re.DOTALL
+        )
+        assert match is not None
+        manifest = json.loads(match.group(1).replace("<\\/", "</"))
+        assert manifest["chart_count"] == 4
+        assert manifest["kpi_count"] == 3
+        assert manifest["coverage_complete"] is True

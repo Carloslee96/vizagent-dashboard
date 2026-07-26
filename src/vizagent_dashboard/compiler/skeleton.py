@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from vizagent_dashboard.compiler.chart_options import build_chart_option
-from vizagent_dashboard.compiler.themes import load_theme
+from vizagent_dashboard.compiler.themes import load_theme, resolve_theme_id
 from vizagent_dashboard.inventory.spec import DataInventory
 from vizagent_dashboard.schemas.dashboard_spec import ChartItem, ChartType, DashboardSpec, PageMode
 
@@ -222,7 +222,7 @@ def compile_artifacts(
     """编译 HTML，并返回数据覆盖和图表契约清单。"""
 
     sheets = _normalize_sheet_data(sheet_data)
-    chosen_theme = theme_id or spec.theme or "midnight-ops"
+    chosen_theme = _resolve_theme(theme_id or spec.theme or "midnight-ops")
     theme_markdown = load_theme(chosen_theme) or load_theme("midnight-ops")
     tokens = parse_design_tokens(theme_markdown)
     css_vars = tokens["css_vars"]
@@ -714,6 +714,12 @@ def _normalize_sheet_data(
     if isinstance(data, list):
         return {"Sheet1": data}
     return data
+
+
+def _resolve_theme(theme_id: str) -> str:
+    """主题 ID 规范化：别名解析到规范 ID，未知值回退到 midnight-ops。"""
+
+    return resolve_theme_id(theme_id) or "midnight-ops"
 
 
 def _rows_for_item(

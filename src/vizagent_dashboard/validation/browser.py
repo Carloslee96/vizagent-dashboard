@@ -87,6 +87,7 @@ async def run_browser_checks(
                       domId: entry.dom_id,
                       type: entry.type,
                       initialized: Boolean(chart),
+                      visible: Boolean(node && node.offsetParent),
                       width: rect?.width || 0,
                       height: rect?.height || 0,
                       seriesCount: series.length,
@@ -137,7 +138,9 @@ async def run_browser_checks(
     for chart in metrics["charts"]:
         if not chart["initialized"]:
             chart_issues.append(f"{chart['domId']} 未初始化")
-        if chart["width"] <= 0 or chart["height"] <= 0:
+        # 零尺寸只对当前可见的图生效；隐藏 Tab（page-tabs / map-tabs）上的图
+        # 在其页签被激活前 offsetParent 为 null，容器 rect 为 0 是预期行为。
+        if chart.get("visible") and (chart["width"] <= 0 or chart["height"] <= 0):
             chart_issues.append(f"{chart['domId']} 容器尺寸为零")
         if chart["seriesCount"] <= 0:
             chart_issues.append(f"{chart['domId']} 缺少 series")

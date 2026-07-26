@@ -22,7 +22,7 @@
       "columns": 2,
       "items": [
         { "chart_type": "bar", "title": "各地区销售额对比", "x_field": "地区", "y_field": "销售额", "width": 1, "height": 1 },
-        { "chart_type": "scatter", "title": "利润 vs 数量", "x_field": "", "y_field": "利润,数量", "width": 1, "height": 1 }
+        { "chart_type": "scatter", "title": "利润 vs 数量", "x_field": "", "y_field": ["利润", "数量"], "width": 1, "height": 1 }
       ]
     }
   ],

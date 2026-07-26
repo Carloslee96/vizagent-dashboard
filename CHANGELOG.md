@@ -1,5 +1,20 @@
 # vizagent-dashboard 更新日志
 
+## [Unreleased] - 2026-07-27
+
+### Phase 1 收口：可安装、可验证、可复现
+
+接手 WIP 检查点（0d4be9e）后的 Phase 1 完成项，对照 `docs/TEST_REPORT_2026-07-27.md` 的发布阻断：
+
+- **测试迁移到新 API**：21 个失败测试全部迁移到 5 主题 / 新编译 / 新门禁契约，新增 CLI 与 wheel 契约测试，共 97 passed。
+- **修复主题规范化**（skeleton）：manifest 现记录规范化主题 ID，旧别名（monitor-dark 等）与规范 ID 产出一致。
+- **修复浏览器门禁假阳性**（browser）：tabs / map-tabs 模式下隐藏 Tab 的图不再误报零尺寸；零尺寸检查只对可见图生效。
+- **修复电商示例 scatter**（spec.json）：`y_field` 由逗号字符串改为 list，散点图正确生成 series。
+- **Skill 边界**：退役 root `SKILL.md`，填充规范 `skills/build-data-dashboard/SKILL.md`（合规 frontmatter，仅 name+description）；修复 `agents/openai.yaml` 乱码。
+- **README 去虚假宣传**：移除未实现的 `config --set api_key` / `--planner` / LLM-key 模式；主题表改为 5 个 clean-room 主题。
+- **wheel 干净安装验证**（P0-1）：包路径修正为 `vizagent_dashboard/`，源码路径外临时 venv 安装可 import / 可执行 / 可 build。
+- **Mock Excel 闭环**（10 sheet / 103 行）：3 KPI + 9 图（line×2 / bar×3 / pie×2 / china+world 地图），coverage 103/103，tabs 切换，浏览器门禁 100/100，9/9 图表渲染，两地图注册。
+
 ## [0.1.0] - 2026-07-26
 
 ### ✨ 初始发布

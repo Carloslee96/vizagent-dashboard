@@ -1,4 +1,4 @@
 interface:
   display_name: "VizAgent Dashboard Builder"
-  short_description: "´Ó CSV/XLSX Éú³É²¢ÑéÖ¤ÀëÏß HTML Êı¾İ´óÆÁ"
-  default_prompt: "Ê¹ÓÃ $build-data-dashboard ·ÖÎöÊı¾İÎÄ¼ş£¬Éú³É DashboardSpec£¬±àÒëÀëÏß HTML ´óÆÁ²¢Íê³ÉÊı¾İ¸²¸ÇÓëä¯ÀÀÆ÷ÑéÖ¤¡£"
+  short_description: "ä» CSV/XLSX ç”Ÿæˆå¯éªŒè¯çš„ç¦»çº¿ HTML æ•°æ®å¤§å±"
+  default_prompt: "ä½¿ç”¨ build-data-dashboard æŠŠæ•°æ®æ–‡ä»¶ç¼–è¯‘æˆ DashboardSpec é©±åŠ¨çš„ HTML å¤§å±ï¼Œå¹¶è¾“å‡ºæ•°æ®è¦†ç›–ä¸éªŒè¯æŠ¥å‘Šã€‚"

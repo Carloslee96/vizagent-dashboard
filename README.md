@@ -39,15 +39,15 @@ vizagent build --data sales.xlsx --requirement "每月销售额趋势" --output 
 
 ## ✨ Features
 
-- **🧠 AI-Powered, Your AI** — Describe your requirements in natural language. Works with your existing AI subscription (Claude, Codex, OpenAI, etc.) — no extra API key to configure, no hidden bills. Agent Skill mode uses your host AI's reasoning; CLI Planner mode uses your own LLM key.
-- **🔧 Zero-API Spec Mode** — Prefer no AI at all? Write a structured `DashboardSpec` JSON and compile deterministically — zero LLM calls, zero API cost, works fully offline.
+- **🧠 AI-Powered, Your AI** — In Agent Skill mode the host AI (Claude, Codex, …) authors the `DashboardSpec` using reasoning you already pay for — no extra API key, no hidden bills.
+- **🔧 Zero-API Spec Mode** — Prefer no AI at all? Write a structured `DashboardSpec` JSON and compile deterministically — zero LLM calls, zero API cost, works fully offline. The `--requirement` flag steers a built-in deterministic planner (still no LLM).
 - **📦 Single HTML Output** — One self-contained file. No server, no database, no build step. Drop it on any static host or open directly in a browser.
-- **📊 Rich Charts** — Line, bar, pie, scatter, map (China/world), KPI cards — powered by ECharts.
-- **🎨 20+ Built-in Themes** — Dark ops, paper brief, warm editorial, command center, fitness glass, music vibe, crypto sleek, terminal amber, and more. Switch with `--theme <name>`.
-- **📁 CSV & Excel** — Read from `.csv` or `.xlsx`, multiple sheets supported.
-- **✅ Built-in Validation** — Automatic checks for truncation, overlap, zero-size charts, map coverage.
+- **📊 Rich Charts** — Line, bar, pie, scatter, map (China/world), KPI cards — powered by ECharts, inlined for offline use.
+- **🎨 5 Clean-Room Themes** — `midnight-ops`, `paper-light`, `warm-editorial`, `clinical-light`, `signal-dark`. No third-party brand names or assets. Switch with `--theme <name>`.
+- **📁 CSV & Excel** — Read from `.csv` or `.xlsx`, multiple sheets supported with per-sheet data-coverage tracking.
+- **✅ Built-in Validation** — Static + optional Playwright checks for truncation, external-script dependency, empty series, unbound maps, and row-level data coverage.
 - **🔒 Secure by Default** — Content Security Policy, HTML escaping, path traversal protection.
-- **🤖 Agent Skill Ready** — Loadable as Claude Code / Codex skill, uses your host AI's subscription.
+- **🤖 Agent Skill Ready** — Loadable as a Claude Code / Codex skill under `skills/build-data-dashboard/`.
 
 ---
 
@@ -57,9 +57,9 @@ vizagent build --data sales.xlsx --requirement "每月销售额趋势" --output 
 |------|-----------------|-----------------|
 | **Agent Skill** (Claude/Codex) | **You** — already paying for your AI subscription | The skill uses your host AI's reasoning — no separate key to configure |
 | **CLI — Spec mode** (`--spec`) | **Nobody** — compiler is fully deterministic | ❌ No API key needed |
-| **CLI — Planner mode** (`--requirement` + optional `--planner`) | **You** — the planner calls your configured LLM | 🟡 Configure your own key via `vizagent config --set api_key=...` |
+| **CLI — Planner mode** (`--requirement`) | **Nobody** — a built-in deterministic planner steers the Spec from keywords | ❌ No API key needed |
 
-> This project never provides free API credits. Every LLM call is charged to **your** account or runs on **your** local AI client. No hidden surprises.
+> There is no `config` command and no `--planner` flag. The compiler and planner never call an LLM. All AI reasoning happens in your host agent (Agent Skill mode) — charged to your own subscription, never to this project.
 
 ---
 
@@ -95,38 +95,24 @@ vizagent build --data sales.xlsx --requirement "每月销售额趋势" --output 
 
 ---
 
-## 🎨 20+ Built-in Themes
+## 🎨 5 Clean-Room Themes
 
-One data file, twenty-plus looks. Pick a theme that matches your story:
+One data file, five looks — each a generic, brand-free token set. Pick a theme that matches your story:
 
 | Theme | Vibe | Best for |
 |-------|------|----------|
-| `paper-linen` | 暖纸衬线人文风 | 排版精良的报告、人文叙事 |
-| `minimal-doc` | 温暖纸感文档风 | 文档型仪表盘、读多写少 |
-| `command-post` | 冷峻指挥中心风 | 运营监控、情报终端 |
-| `fitness-glass` | 健康玻璃环风 | 消费级数据环、健康指标 |
-| `warm-editorial` | 暖色调新闻室风 | 内容分析、媒体故事 |
-| `monitor-dark` | 暗色运维监控风 | Grafana 风运维仪表盘 |
-| `cozy-retreat` | 温暖舒适旅行风 | 暖棕色系的旅行/居家数据 |
-| `clean-slate` | 简洁亮色科技风 | 极简风格的科技仪表盘 |
-| `design-toolkit` | 设计师工具风 | 设计师审美的看板 |
-| `vibe-night` | 音乐暗色律动风 | 暗色音乐风格仪表盘 |
-| `crypto-sleek` | 深色金融科技风 | 加密资产、深色金融 |
-| `checkout-light` | 亮色支付简洁风 | 支付/电商亮色简洁风 |
-| `minimal-tracker` | 极简项目管理风 | 项目跟踪、看板 |
-| `ocean-night` | 深海暗色风 | 海洋/能源暗色仪表盘 |
-| `error-monitor` | 错误监控暗色风 | 错误日志监控 |
-| `growth-analytics` | 产品数据分析风 | 产品增长分析 |
-| `deal-room` | 金融暗色交易风 | 金融交易仪表盘 |
-| `open-table` | 开源数据暗色风 | 开源数据仪表盘 |
-| `amber-console` | 琥珀色复古终端风 | 复古终端风格的运维 |
-| `deploy-light` | 亮色部署极简风 | 部署流水/极简风 |
-| `midnight-ops` | 默认深色酷炫风 | 默认通用主题 |
+| `midnight-ops` (default) | 深靛灰背景、蓝绿数据色 | 运营监控、技术演示 |
+| `paper-light` | 暖白纸张、墨色文字 | 经营汇报、长时间阅读 |
+| `warm-editorial` | 浅米色、暗红重点 | 内容分析、趋势故事 |
+| `clinical-light` | 冷白、蓝青强调 | 健康、设备、服务质量 |
+| `signal-dark` | 炭黑、琥珀青信号 | 告警、基础设施、高优先级状态 |
+
+Legacy IDs (`monitor-dark`, `paper-brief`, `paper-linen`, `minimal-doc`, `clean-slate`, `fitness-glass`, `command-post`, `amber-console`) resolve to the closest theme above.
 
 Switch with `--theme <name>`:
 
 ```bash
-vizagent build --data sales.xlsx --theme paper-linen --output dashboard/
+vizagent build --data sales.xlsx --theme paper-light --output dashboard/
 ```
 
 ---
@@ -173,7 +159,7 @@ vizagent build \
 # Spec mode: data file + structured spec → zero API cost
 vizagent build --data data.xlsx --spec spec.json --output dashboard/
 
-# Planner mode: data file + natural language → uses your LLM key
+# Planner mode: data file + requirement keywords → deterministic Spec (still no LLM)
 vizagent build --data data.xlsx --requirement "按省份的销售额地图" --output dashboard/
 
 # Specify theme
@@ -183,7 +169,7 @@ vizagent build --data data.xlsx --theme midnight-ops --output dashboard/
 vizagent build \
   --data data.xlsx \
   --requirement "展示各品类季度趋势，顶部 KPI 卡片显示总额和增长" \
-  --theme paper-brief \
+  --theme paper-light \
   --output dashboard/
 ```
 
@@ -192,10 +178,13 @@ vizagent build \
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--data` | required | Path to CSV or Excel file |
-| `--requirement` | auto-detect | Business requirement in natural language |
+| `--requirement` | `""` | Business requirement; steers the deterministic planner (no LLM) |
 | `--spec` | — | Path to DashboardSpec JSON (zero-API mode) |
-| `--theme` | `midnight-ops` | Theme: see the [Themes gallery](#-20-built-in-themes) below — 20+ options |
+| `--theme` | from Spec or `midnight-ops` | Theme override; see [Themes](#-5-clean-room-themes) |
+| `--page-mode` | `single_page` | `single_page` or `tabs` |
+| `--deployment` | `embedded` | `embedded` (offline) or `cdn` |
 | `--output` | `./output` | Output directory |
+| `--browser` | `false` | Run the Playwright validation gate |
 | `--open` | `false` | Open dashboard in browser after build |
 
 ---
@@ -215,27 +204,18 @@ vizagent build \
                    └──────────────┘   └──────────────┘
 ```
 
-**Key design**: The Compiler is fully deterministic — no LLM, no API call, no network. The Planner (NLP → spec) runs on **your** AI client (Agent Skill mode) or on **your** configured LLM key (CLI Planner mode). In spec mode, the entire pipeline works offline with zero API cost.
+**Key design**: The Compiler is fully deterministic — no LLM, no API call, no network. The Planner (requirement → Spec) is a deterministic keyword planner, not an LLM. In Agent Skill mode the host AI authors the `DashboardSpec` using its own reasoning. In spec mode, the entire pipeline works offline with zero API cost.
 
 ---
 
 ## 🤖 Agent Skill Mode
 
-vizagent-dashboard can be loaded as a **Claude Code** or **Codex** skill:
+vizagent-dashboard ships as a loadable **Claude Code / Codex** skill at `skills/build-data-dashboard/` (with `SKILL.md` + `agents/openai.yaml`). The host AI reads the inventory, authors a `DashboardSpec`, then runs the `vizagent` CLI to compile and validate:
 
-```xml
-<skill name="vizagent-dashboard">
-  <context>
-    You can generate data dashboards using the vizagent tool.
-  </context>
-  <instruction>
-    When the user provides a data file and business requirements:
-    1. Analyze the data structure
-    2. Design the dashboard layout in DashboardSpec format
-    3. Run: vizagent build --data <file> --spec <spec>
-    4. Open the output HTML
-  </instruction>
-</skill>
+```bash
+vizagent inventory --data <file> --output data.inventory.json
+vizagent compile  --data <file> --spec <spec.json> --output dashboard/
+vizagent validate --data <file> --spec <spec.json> --html dashboard/output.html
 ```
 
 The skill uses **your host AI's own reasoning** — you're already paying for your AI subscription, no extra key to configure.

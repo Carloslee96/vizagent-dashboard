@@ -104,14 +104,8 @@ def midnight_ops_theme_content() -> str:
 
 @pytest.fixture
 def known_themes() -> list[str]:
-    """已知存在的主题 ID 列表。"""
-    return [
-        "paper-linen", "minimal-doc", "command-post", "fitness-glass",
-        "warm-editorial", "monitor-dark", "cozy-retreat", "clean-slate",
-        "design-toolkit", "vibe-night", "crypto-sleek", "checkout-light",
-        "minimal-tracker", "ocean-night", "error-monitor", "growth-analytics",
-        "deal-room", "open-table", "amber-console", "deploy-light",
-    ]
+    """已知存在的 clean-room 主题 ID 列表（5 个通用主题）。"""
+    return ["midnight-ops", "paper-light", "warm-editorial", "clinical-light", "signal-dark"]
 
 
 @pytest.fixture
