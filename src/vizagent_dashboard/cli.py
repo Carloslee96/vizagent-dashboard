@@ -121,8 +121,6 @@ def validate_command(
         _write_json(output, report)
     except click.exceptions.Exit:
         raise
-    except click.exceptions.Exit:
-        raise
     except click.ClickException:
         raise
     except Exception as exc:

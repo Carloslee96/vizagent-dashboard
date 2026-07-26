@@ -388,7 +388,7 @@ def build_resource_injection(chart_names: list[str]) -> str:
     if not chart_names:
         return ""
 
-    registry = get_registry()
+    registry = get_registry()  # noqa: F841 - 预留：复杂图表参考代码生成将基于 registry，当前 lookup_chart 已足够
     parts = []
     seen_cdn = set()
 

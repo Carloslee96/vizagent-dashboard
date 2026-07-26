@@ -2,6 +2,15 @@
 
 ## [Unreleased] - 2026-07-27
 
+### Phase 4 收口：开源清理与权利审计
+
+- **Provenance**：重写 `tools/upstream-manifest.toml`，记录代码模块来源 commit `94f763f` + extracted_at；删除 20 个已废弃品牌主题映射；声明 5 个新主题为 clean-room 原创非提取；声明 vendor 资产来源。
+- **治理文件**：扩写 `NOTICE`（完整第三方清单）；新建 `SECURITY.md`（安全模型 + 漏洞报告）、`CONTRIBUTING.md`（README 已链接）、`SBOM.md`（依赖许可证清单）。
+- **主题审计**：新建 `docs/THEME_AUDIT.md`，实证 5 主题无第三方品牌残留，9 别名解析到 clean 主题。
+- **GeoJSON 许可**：china/world.json 来源在 DataV 与 ECharts 之间记录不一致，标记「发布前需复核」，未复核前不得打 v0.1.0 标签。
+- **CI 三平台**：`ci.yml` 扩为 Windows/macOS/Ubuntu × Python 3.10-3.12 跑 unit；新增 contract job 跑 CLI + wheel 契约测试。
+- **Lint 清债**：ruff 24 个错误清零（auto-fix import 排序/未用导入 + 手动修 cli 重复 except + 5 处提取代码合理模式 noqa），CI lint 门禁转绿。
+
 ### Phase 1 收口：可安装、可验证、可复现
 
 接手 WIP 检查点（0d4be9e）后的 Phase 1 完成项，对照 `docs/TEST_REPORT_2026-07-27.md` 的发布阻断：

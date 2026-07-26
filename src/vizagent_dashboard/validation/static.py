@@ -92,7 +92,7 @@ def check_chart_entries(entries: list[dict[str, Any]]) -> list[str]:
         data_series = [item for item in series if isinstance(item, dict) and isinstance(item.get("data"), list)]
         if not data_series or not any(item["data"] for item in data_series):
             issues.append(f"图表 {index}（{chart_type}）没有有效数据")
-        if chart_type == "map_china":
+        if chart_type == "map_china":  # noqa: SIM102
             if not any(item.get("type") == "map" and item.get("map") == "china" for item in series if isinstance(item, dict)):
                 issues.append(f"图表 {index} 未绑定中国地图")
         if chart_type == "map_world":

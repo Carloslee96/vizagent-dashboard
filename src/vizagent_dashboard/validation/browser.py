@@ -117,7 +117,7 @@ async def run_browser_checks(
             )
             if screenshot_path:
                 await page.screenshot(path=str(Path(screenshot_path).resolve()), full_page=True)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - 浏览器自动化任意步骤失败都应落为可读错误而非崩溃
             errors.append(f"playwright 执行失败: {exc}")
             metrics = {
                 "charts": [],

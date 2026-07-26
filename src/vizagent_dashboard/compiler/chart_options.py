@@ -91,7 +91,7 @@ def _extract_chart_inventory_short(prd: str) -> str:
             capturing = True
             continue
         if capturing:
-            if line.strip().startswith("#") or line.strip().startswith("【"):
+            if line.strip().startswith("#") or line.strip().startswith("【"):  # noqa: SIM102
                 if inventory_lines:
                     break
             if line.strip():
@@ -367,7 +367,7 @@ def build_chart_options_batch(charts: list[dict]) -> list[ChartOption]:
                 chart_palette=c.get("chart_palette"),
                 css_vars=c.get("css_vars"),
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - 批量生成单图失败不应中断整批
             logger.warning(f"build_chart_options_batch failed for chart {chart_id}: {e}")
             option_json = json.dumps({"title": {"text": c.get("title", "")}})
 

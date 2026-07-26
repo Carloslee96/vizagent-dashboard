@@ -15,7 +15,6 @@ from __future__ import annotations
 import math
 from typing import Any
 
-
 LAYOUT_MODES = frozenset({"auto", "single_page", "tabs"})
 SINGLE_PAGE_COMFORTABLE_MAX = 8
 SINGLE_PAGE_HARD_MAX = 16
@@ -123,8 +122,8 @@ def _find_free_placement(
     grid_center_x = columns / 2
     grid_center_y = rows / 2
     candidates: list[tuple[float, int, int]] = []
-    for row in range(0, rows - row_span + 1):
-        for column in range(0, columns - col_span + 1):
+    for row in range(rows - row_span + 1):
+        for column in range(columns - col_span + 1):
             if any(
                 occupied[r][c]
                 for r in range(row, row + row_span)

@@ -24,6 +24,7 @@ def _build_wheel(tmp_path: Path) -> Path:
         [sys.executable, "-m", "pip", "wheel", "--no-deps", "-w", str(tmp_path), str(_SKILL_ROOT)],
         capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode != 0:
         pytest.skip(f"pip wheel 失败: {result.stderr[:400]}")

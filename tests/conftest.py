@@ -38,7 +38,7 @@ def ecommerce_data() -> list[dict[str, Any]]:
     from vizagent_dashboard.inventory.reader import read_file
 
     sheets = read_file(str(_DATA_DIR / "data.csv"))
-    return list(sheets.values())[0]
+    return next(iter(sheets.values()))
 
 
 @pytest.fixture(scope="session")

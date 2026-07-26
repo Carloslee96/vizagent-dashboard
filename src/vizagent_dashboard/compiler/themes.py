@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import re
 from importlib.resources import files
-from typing import Optional
-
 
 THEME_IDS = (
     "midnight-ops",
@@ -34,7 +32,7 @@ ALIASES = {
 _cache: dict[str, str] = {}
 
 
-def resolve_theme_id(id_or_name: Optional[str]) -> str:
+def resolve_theme_id(id_or_name: str | None) -> str:
     key = (id_or_name or "").strip()
     if not key:
         return ""
@@ -79,7 +77,7 @@ def list_themes() -> list[dict[str, object]]:
     return themes
 
 
-def theme_display_name(theme_id: Optional[str]) -> str:
+def theme_display_name(theme_id: str | None) -> str:
     resolved = resolve_theme_id(theme_id)
     for theme in list_themes():
         if theme["id"] == resolved:
@@ -87,7 +85,7 @@ def theme_display_name(theme_id: Optional[str]) -> str:
     return ""
 
 
-def build_design_context(theme_id: Optional[str]) -> str:
+def build_design_context(theme_id: str | None) -> str:
     resolved = resolve_theme_id(theme_id) or "midnight-ops"
     return (
         "按以下通用设计 token 生成 DashboardSpec；不要复制第三方品牌名称、Logo 或专有资产。\n\n"

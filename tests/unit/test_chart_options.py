@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from vizagent_dashboard.compiler.chart_options import build_chart_option
 
 
@@ -200,7 +198,6 @@ class TestBuildChartOptionWithRealData:
     def test_bar_with_real_data(self, ecommerce_data, chart_palette, css_vars):
         """按类别聚合→4 类。"""
         # 使用已聚合的数据（skeleton 层在调用前聚合，这里直接测 build_chart_option）
-        import csv
         from collections import defaultdict
 
         agg: dict[str, float] = defaultdict(float)
@@ -226,7 +223,6 @@ class TestBuildChartOptionWithRealData:
         agg: dict[str, float] = defaultdict(float)
         for row in ecommerce_data:
             agg[row["地区"]] += float(row["销售额"])
-        import csv
         data = [{"地区": k, "销售额": v} for k, v in sorted(agg.items())]
 
         option_json = build_chart_option(

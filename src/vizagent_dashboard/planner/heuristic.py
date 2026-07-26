@@ -12,7 +12,6 @@ from typing import Any
 from vizagent_dashboard.inventory.spec import DataInventory, SheetInfo
 from vizagent_dashboard.schemas.dashboard_spec import ChartItem, ChartType, DashboardSpec, LayoutRow, PageMode
 
-
 _TIME_WORDS = ("日期", "时间", "月份", "年月", "季度", "周", "date", "time", "month", "year")
 _GEO_WORDS = ("地区", "区域", "省份", "省", "城市", "region", "province", "country")
 _LONGITUDE_WORDS = ("经度", "longitude", "lng", "lon")
