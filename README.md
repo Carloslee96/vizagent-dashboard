@@ -17,9 +17,9 @@
 <br>
 
 <div align="center">
-  <a href="https://vizagent.github.io/dashboard/demo/ecommerce">
-    <img src="https://raw.githubusercontent.com/vizagent/dashboard/main/docs/assets/demo.gif"
-         alt="vizagent-dashboard demo"
+  <a href="examples/ecommerce/">
+    <img src="docs/assets/ecommerce-thumb.png"
+         alt="vizagent-dashboard demo — ecommerce dashboard in midnight-ops theme"
          width="720">
   </a>
   <br>
@@ -63,35 +63,48 @@ vizagent build --data sales.xlsx --requirement "每月销售额趋势" --output 
 
 ---
 
-## 🖼️ Gallery
+## 🖼️ Gallery — one data file, five looks
+
+同一份电商数据，5 个 clean-room 主题各编译一次。下图为其中 4 个主题的实际渲染首屏（截图来自 `examples/ecommerce/`）：
 
 <div align="center">
   <table>
     <tr>
-      <td align="center" width="33%">
-        <a href="https://vizagent.github.io/dashboard/demo/ecommerce">
-          <img src="https://raw.githubusercontent.com/vizagent/dashboard/main/docs/assets/ecommerce-thumb.png" width="100%">
-          <br><b>🛒 电商经营分析</b>
+      <td align="center" width="50%">
+        <a href="examples/ecommerce/">
+          <img src="docs/assets/ecommerce-thumb.png" width="100%">
+          <br><b>midnight-ops</b>（默认）
         </a>
-        <br>Sales trends, category breakdown, regional map
+        <br>深靛灰背景、蓝绿数据色
       </td>
-      <td align="center" width="33%">
-        <a href="https://vizagent.github.io/dashboard/demo/connectivity">
-          <img src="https://raw.githubusercontent.com/vizagent/dashboard/main/docs/assets/connectivity-thumb.png" width="100%">
-          <br><b>🌐 全球连接分布</b>
+      <td align="center" width="50%">
+        <a href="examples/ecommerce/">
+          <img src="docs/assets/theme-paper-light.png" width="100%">
+          <br><b>paper-light</b>
         </a>
-        <br>World map, protocol mix, latency heatmap
+        <br>暖白纸张、墨色文字
       </td>
-      <td align="center" width="33%">
-        <a href="https://vizagent.github.io/dashboard/demo/operations">
-          <img src="https://raw.githubusercontent.com/vizagent/dashboard/main/docs/assets/operations-thumb.png" width="100%">
-          <br><b>🏥 运营健康监控</b>
+    </tr>
+    <tr>
+      <td align="center" width="50%">
+        <a href="examples/ecommerce/">
+          <img src="docs/assets/theme-warm-editorial.png" width="100%">
+          <br><b>warm-editorial</b>
         </a>
-        <br>System metrics, error rates, SLA tracking
+        <br>浅米色、暗红重点
+      </td>
+      <td align="center" width="50%">
+        <a href="examples/ecommerce/">
+          <img src="docs/assets/theme-signal-dark.png" width="100%">
+          <br><b>signal-dark</b>
+        </a>
+        <br>炭黑、琥珀青信号
       </td>
     </tr>
   </table>
 </div>
+
+> 第五个主题 `clinical-light` 可用 `--theme clinical-light` 自行构建查看。
 
 ---
 

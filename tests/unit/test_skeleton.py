@@ -15,10 +15,10 @@ import json
 import re
 
 from vizagent_dashboard.compiler.skeleton import (
-    compile_dashboard,
-    parse_design_tokens,
     build_css_block,
     build_html,
+    compile_dashboard,
+    parse_design_tokens,
 )
 from vizagent_dashboard.validation.static import validate_html
 

@@ -12,12 +12,12 @@ from __future__ import annotations
 
 from vizagent_dashboard.compiler.skeleton import compile_dashboard
 from vizagent_dashboard.validation.static import (
-    check_html_truncation,
-    count_charts_in_html,
-    check_overlaps,
-    check_zero_size,
     check_duplicate_maps,
     check_empty_options,
+    check_html_truncation,
+    check_overlaps,
+    check_zero_size,
+    count_charts_in_html,
     validate_html,
 )
 

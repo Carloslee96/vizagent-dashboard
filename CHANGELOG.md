@@ -2,6 +2,13 @@
 
 ## [Unreleased] - 2026-07-27
 
+### 发布材料准备
+
+- **Release Notes**：新建 `docs/RELEASE_NOTES_v0.1.0.md`，精修的 GitHub Release 正文草稿（安装、上手、内容清单、已知限制、致谢）。
+- **发布操作手册**：新建 `docs/PUBLISH_RUNBOOK.md`，面向 maintainer 的发布流程（commit/push/release 概念辨析、自检、打 tag、PyPI、回滚）。
+- **README 截图去死链**：用真实 ecommerce 大屏截图替换不存在的 `demo.gif`；Gallery 改为「同数据 5 主题」实景首屏（midnight-ops / paper-light / warm-editorial / signal-dark），移除指向未建 Pages demo 站的死链。
+- **Lint 整理**：3 个测试文件 import 按 ruff 字母序重排，无逻辑变化。
+
 ### Phase 4 收口：开源清理与权利审计
 
 - **Provenance**：重写 `tools/upstream-manifest.toml`，记录代码模块来源 commit `94f763f` + extracted_at；删除 20 个已废弃品牌主题映射；声明 5 个新主题为 clean-room 原创非提取；声明 vendor 资产来源。

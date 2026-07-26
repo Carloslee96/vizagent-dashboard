@@ -12,11 +12,11 @@ from __future__ import annotations
 
 from vizagent_dashboard.compiler.themes import (
     THEME_IDS,
+    build_design_context,
     list_themes,
     load_theme,
-    theme_display_name,
     resolve_theme_id,
-    build_design_context,
+    theme_display_name,
 )
 
 
