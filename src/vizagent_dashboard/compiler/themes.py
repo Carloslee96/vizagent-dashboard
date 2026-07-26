@@ -123,11 +123,21 @@ def list_themes() -> list[dict[str, str]]:
 
 
 def theme_display_name(theme_id: Optional[str]) -> str:
-    """主题 ID → 显示名（来自 .md 文件第一行标题）。"""
+    """主题 ID → 显示名（来自 .md 文件第一行标题）。
+
+    自动解析主题别名（如 midnight-ops → monitor-dark）。
+    """
     if not theme_id:
         return ""
+    # 解析别名
+    ALIASES = {
+        "midnight-ops": "monitor-dark",
+        "paper-brief": "minimal-doc",
+        "dark-ops": "monitor-dark",
+    }
+    resolved = ALIASES.get(theme_id, theme_id)
     for t in list_themes():
-        if t["id"] == theme_id:
+        if t["id"] == resolved:
             return t["name"]
     return ""
 

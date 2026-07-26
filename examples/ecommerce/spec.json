@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "title": "电商销售数据大屏",
+  "theme": "midnight-ops",
+  "layout": [
+    {
+      "columns": 3,
+      "items": [
+        { "chart_type": "kpi", "title": "总销售额", "data_field": "销售额", "aggregation": "sum", "width": 1, "height": 1 },
+        { "chart_type": "kpi", "title": "总利润", "data_field": "利润", "aggregation": "sum", "width": 1, "height": 1 },
+        { "chart_type": "kpi", "title": "总销量", "data_field": "数量", "aggregation": "sum", "width": 1, "height": 1 }
+      ]
+    },
+    {
+      "columns": 2,
+      "items": [
+        { "chart_type": "line", "title": "月销售额趋势", "x_field": "月份", "y_field": "销售额", "width": 1, "height": 1 },
+        { "chart_type": "pie", "title": "各品类销售额占比", "x_field": "类别", "y_field": "销售额", "width": 1, "height": 1 }
+      ]
+    },
+    {
+      "columns": 2,
+      "items": [
+        { "chart_type": "bar", "title": "各地区销售额对比", "x_field": "地区", "y_field": "销售额", "width": 1, "height": 1 },
+        { "chart_type": "scatter", "title": "利润 vs 数量", "x_field": "", "y_field": "利润,数量", "width": 1, "height": 1 }
+      ]
+    }
+  ],
+  "metadata": {
+    "source": "examples/ecommerce/data.csv",
+    "description": "6 个月 × 4 品类 × 3 地区的电商销售数据演示",
+    "generated_at": "2025-07-25"
+  }
+}

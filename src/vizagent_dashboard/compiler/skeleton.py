@@ -243,9 +243,15 @@ def build_html(
     for idx, option_json in enumerate(chart_options):
         safe_option = option_json.replace("</script>", "<\\/script>")
         panel_id = f"chart-panel-{idx}"
+        # 从 option JSON 提取标题
+        try:
+            opt = json.loads(option_json)
+            panel_title = html.escape(str(opt.get("title", {}).get("text", "")) or f"图表 {idx + 1}")
+        except (json.JSONDecodeError, AttributeError):
+            panel_title = f"图表 {idx + 1}"
         chart_panels_html_parts.append(f"""
         <div class="panel">
-          <div class="panel-title">图表 {idx + 1}</div>
+          <div class="panel-title">{panel_title}</div>
           <div id="{panel_id}" class="chart-container"></div>
         </div>""")
         chart_init_scripts.append(f"""
@@ -363,8 +369,11 @@ def compile_dashboard(
     chart_items: list[dict] = []
     for row in layout:
         for item in getattr(row, "items", []) or []:
+            # chart_type 可能是枚举，统一转成字符串值
+            raw_ct = getattr(item, "chart_type", "bar")
+            ct_str = raw_ct.value if hasattr(raw_ct, "value") else str(raw_ct)
             chart_items.append({
-                "chart_type": getattr(item, "chart_type", "bar"),
+                "chart_type": ct_str,
                 "title": getattr(item, "title", "") or f"图表 {len(chart_items) + 1}",
                 "x_field": getattr(item, "x_field", ""),
                 "y_field": getattr(item, "y_field", ""),
@@ -381,24 +390,35 @@ def compile_dashboard(
             label = item.get("title", "")
             value = ""
             if excel_data:
-                # 找到 data_field 列对应的最后一个非空值
                 field = item.get("data_field", "") or label
+                aggr = item.get("aggregation", "").lower()
                 if field in (excel_data[0] if excel_data else {}):
+                    values = []
                     for row in reversed(excel_data):
                         raw = row.get(field)
                         if raw is not None and raw != "" and raw != 0:
                             try:
                                 num = float(str(raw).replace(",", "").replace("¥", "").replace("%", "").strip())
-                                if any(kw in label.lower() for kw in ["率", "占比", "%"]):
-                                    value = f"{num:.1f}%"
-                                elif any(kw in label for kw in ["¥", "收入", "金额", "销售额", "利润"]):
-                                    value = f"¥{num:,.0f}" if abs(num) >= 10000 else f"¥{num:,.2f}"
-                                else:
-                                    value = f"{num:,.0f}"
-                                break
+                                values.append(num)
                             except (ValueError, TypeError):
-                                value = str(raw)
-                                break
+                                pass
+                    if aggr == "sum":
+                        total = sum(values)
+                        if any(kw in label.lower() for kw in ["率", "占比", "%"]):
+                            value = f"{total:.1f}%"
+                        elif any(kw in label for kw in ["¥", "收入", "金额", "销售额", "利润"]):
+                            value = f"¥{total:,.0f}" if abs(total) >= 10000 else f"¥{total:,.2f}"
+                        else:
+                            value = f"{total:,.0f}"
+                    elif values:
+                        # 默认取最后一个非空值
+                        num = values[0]
+                        if any(kw in label.lower() for kw in ["率", "占比", "%"]):
+                            value = f"{num:.1f}%"
+                        elif any(kw in label for kw in ["¥", "收入", "金额", "销售额", "利润"]):
+                            value = f"¥{num:,.0f}" if abs(num) >= 10000 else f"¥{num:,.2f}"
+                        else:
+                            value = f"{num:,.0f}"
             kpi_cards.append({"label": label, "value": value or "—"})
         else:
             chart_only_items.append(item)
@@ -429,8 +449,17 @@ def compile_dashboard(
 
         # 数据筛选
         data = excel_data or []
-        # 单系列聚合（按 x_field 分组）
-        if data and x_field and y_field and isinstance(y_field, str) and "," not in y_field:
+        # 处理 y_field：逗号分隔 → 多系列
+        if isinstance(y_field, str) and "," in y_field:
+            y_fields_list = [f.strip() for f in y_field.split(",") if f.strip()]
+        else:
+            y_fields_list = []
+
+        # 单系列聚合（按 x_field 分组，仅当 y_field 是单字段且 chart_type 需要分组）
+        if y_fields_list:
+            # 多字段（如 scatter 的 x/y）：不聚合，传原始数据
+            pass
+        elif data and x_field and y_field and isinstance(y_field, str):
             # 单系列：按 x_field 聚合 y_field
             aggregated: dict[str, float] = {}
             for row in data:
@@ -447,12 +476,19 @@ def compile_dashboard(
                     pass
             data = [{x_field: k, y_field: v} for k, v in aggregated.items()]
 
+        # 对多字段、或 scatter 等需要两轴的，把 y_field 转成 list
+        final_y: str | list[str] = y_field
+        if ct == "scatter" and y_fields_list:
+            final_y = y_fields_list
+        elif y_fields_list:
+            final_y = y_fields_list
+
         option = build_chart_option(
             chart_type=ct if ct not in {"map_china", "map_world"} else "bar",
             title=item.get("title", ""),
             data=data,
             x_field=x_field,
-            y_field=y_field,
+            y_field=final_y,
             chart_palette=chart_palette,
             css_vars=css_vars,
         )

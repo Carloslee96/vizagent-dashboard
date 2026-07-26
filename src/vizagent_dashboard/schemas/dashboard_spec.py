@@ -25,6 +25,7 @@ class ChartItem(BaseModel):
     data_sheet: str = ""
     x_field: str = ""
     y_field: str = ""
+    data_field: str = ""
     series_field: str | None = None
     aggregation: str | None = None
     width: int = 1

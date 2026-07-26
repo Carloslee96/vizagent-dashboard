@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电商销售数据大屏</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://registry.npmmirror.com https://cdn.bootcdn.net https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
+  <style>
+:root {
+  --bg-primary: #111217;
+  --bg-deeper: #0b0c0f;
+  --bg-card: #181b1f;
+  --bg-elevated: #1f2329;
+  --bg-hover: #262b33;
+  --border-subtle: #2a2f37;
+  --accent-primary: #5794F2;
+  --accent-success: #73BF69;
+  --accent-warning: #FF9830;
+  --accent-danger: #F2495C;
+  --text-primary: #d8d9da;
+  --text-secondary: #9fa4ad;
+  --map-area: #1f2329;
+  --map-boundary: #9fa4ad;
+  --text-muted: #6e7280;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, sans-serif;
+  background-color: #111217;
+  color: #d8d9da;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.dashboard-container {
+  max-width: 1920px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #2a2f37;
+}
+
+.dashboard-title {
+  font-family: Inter, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #d8d9da;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+}
+
+.panel {
+  background-color: #181b1f;
+  border: 1px solid #2a2f37;
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #d8d9da;
+  margin-bottom: 12px;
+}
+
+.kpi-card {
+  background-color: #181b1f;
+  border: 1px solid #2a2f37;
+  border-radius: 16px;
+  padding: 20px 24px;
+  text-align: left;
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: #9fa4ad;
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-family: Inter, sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #d8d9da;
+}
+
+.chart-container {
+  width: 100%;
+  height: 320px;
+}
+
+.text-secondary {
+  color: #9fa4ad;
+}
+
+.accent {
+  color: #5794F2;
+}
+</style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">电商销售数据大屏</h1>
+      <span class="text-secondary">vizagent-dashboard</span>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="kpi-card">
+          <div class="kpi-label">总销售额</div>
+          <div class="kpi-value">¥5,465,000</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">总利润</div>
+          <div class="kpi-value">¥1,300,800</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">总销量</div>
+          <div class="kpi-value">100,360</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="margin-top: 16px;">
+
+        <div class="panel">
+          <div class="panel-title">月销售额趋势</div>
+          <div id="chart-panel-0" class="chart-container"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">各品类销售额占比</div>
+          <div id="chart-panel-1" class="chart-container"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">各地区销售额对比</div>
+          <div id="chart-panel-2" class="chart-container"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">利润 vs 数量</div>
+          <div id="chart-panel-3" class="chart-container"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- ECharts 主库 — 三层备用加载 -->
+<script src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"><\/script>');
+  }
+</script>
+  <script>
+
+    (function() {
+      var chart = echarts.init(document.getElementById('chart-panel-0'));
+      chart.setOption({"backgroundColor": "transparent", "color": ["#5794F2", "#73BF69", "#EAB839", "#B877D9", "#6ED0E0", "#FF9830", "#F2495C"], "animationDuration": 600, "animationEasing": "cubicOut", "title": {"text": "月销售额趋势", "left": "left", "textStyle": {"color": "#d8d9da", "fontSize": 14, "fontWeight": "normal"}}, "tooltip": {"trigger": "axis", "backgroundColor": "#181b1f", "borderColor": "#2a2f37", "textStyle": {"color": "#d8d9da", "fontSize": 12}}, "grid": {"top": "18%", "bottom": "10%", "left": "5%", "right": "7%", "containLabel": true}, "xAxis": {"type": "category", "name": "月份", "boundaryGap": false, "data": ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06"], "axisLine": {"lineStyle": {"color": "#2a2f37"}}, "axisLabel": {"color": "#9fa4ad", "fontSize": 10}}, "yAxis": {"type": "value", "name": "销售额", "axisLine": {"lineStyle": {"color": "#2a2f37"}}, "axisLabel": {"color": "#9fa4ad", "fontSize": 10}, "splitLine": {"lineStyle": {"color": "#2a2f37", "type": "dashed"}}}, "legend": {"show": false, "top": 0, "right": 0, "textStyle": {"color": "#9fa4ad", "fontSize": 10}}, "series": [{"name": "销售额", "type": "line", "data": [813000.0, 839000.0, 888000.0, 933000.0, 975000.0, 1017000.0], "smooth": true, "showSymbol": false, "connectNulls": false, "lineStyle": {"width": 2, "color": "#5794F2"}, "itemStyle": {"color": "#5794F2"}, "emphasis": {"focus": "series"}}]});
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    (function() {
+      var chart = echarts.init(document.getElementById('chart-panel-1'));
+      chart.setOption({"backgroundColor": "transparent", "color": ["#5794F2", "#73BF69", "#EAB839", "#B877D9", "#6ED0E0", "#FF9830", "#F2495C"], "animationDuration": 600, "animationEasing": "cubicOut", "title": {"text": "各品类销售额占比", "left": "left", "textStyle": {"color": "#d8d9da", "fontSize": 14, "fontWeight": "normal"}}, "tooltip": {"trigger": "item", "backgroundColor": "#181b1f", "borderColor": "#2a2f37", "textStyle": {"color": "#d8d9da", "fontSize": 12}}, "legend": {"type": "scroll", "top": 0, "right": 0, "textStyle": {"color": "#9fa4ad", "fontSize": 10}}, "series": [{"name": "销售额", "type": "pie", "radius": ["28%", "68%"], "center": ["45%", "56%"], "startAngle": 90, "avoidLabelOverlap": true, "label": {"show": true, "color": "#9fa4ad", "fontSize": 10, "formatter": "{b} {c}"}, "labelLine": {"length": 8, "length2": 6}, "emphasis": {"scale": true, "scaleSize": 6, "focus": "self"}, "data": [{"name": "数码", "value": 2112000.0}, {"name": "服装", "value": 749000.0}, {"name": "食品", "value": 1111000.0}, {"name": "家居", "value": 1493000.0}]}]});
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    (function() {
+      var chart = echarts.init(document.getElementById('chart-panel-2'));
+      chart.setOption({"backgroundColor": "transparent", "color": ["#5794F2", "#73BF69", "#EAB839", "#B877D9", "#6ED0E0", "#FF9830", "#F2495C"], "animationDuration": 600, "animationEasing": "cubicOut", "title": {"text": "各地区销售额对比", "left": "left", "textStyle": {"color": "#d8d9da", "fontSize": 14, "fontWeight": "normal"}}, "tooltip": {"trigger": "axis", "backgroundColor": "#181b1f", "borderColor": "#2a2f37", "textStyle": {"color": "#d8d9da", "fontSize": 12}}, "xAxis": {"type": "category", "name": "地区", "data": ["华东", "华南", "华北"], "axisLine": {"lineStyle": {"color": "#2a2f37"}}, "axisLabel": {"color": "#9fa4ad", "fontSize": 10, "interval": 0, "rotate": 0}}, "yAxis": {"type": "value", "name": "销售额", "axisLine": {"lineStyle": {"color": "#2a2f37"}}, "axisLabel": {"color": "#9fa4ad", "fontSize": 10}, "splitLine": {"lineStyle": {"color": "#2a2f37", "type": "dashed"}}}, "grid": {"top": "16%", "bottom": "10%", "left": "5%", "right": "6%", "containLabel": true}, "legend": {"show": false, "top": 0, "right": 0, "textStyle": {"color": "#9fa4ad", "fontSize": 10}}, "series": [{"name": "销售额", "type": "bar", "data": [2187000.0, 1741000.0, 1537000.0], "barMaxWidth": 24, "itemStyle": {"color": "#5794F2", "borderRadius": [3, 3, 0, 0]}, "label": {"show": true, "position": "top", "color": "#9fa4ad", "fontSize": 9}, "emphasis": {"focus": "series"}}]});
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    (function() {
+      var chart = echarts.init(document.getElementById('chart-panel-3'));
+      chart.setOption({"backgroundColor": "transparent", "color": ["#5794F2", "#73BF69", "#EAB839", "#B877D9", "#6ED0E0", "#FF9830", "#F2495C"], "animationDuration": 600, "animationEasing": "cubicOut", "title": {"text": "利润 vs 数量", "left": "left", "textStyle": {"color": "#d8d9da", "fontSize": 14, "fontWeight": "normal"}}, "tooltip": {"trigger": "item", "backgroundColor": "#181b1f", "borderColor": "#2a2f37", "textStyle": {"color": "#d8d9da", "fontSize": 12}}, "grid": {"top": "16%", "bottom": "10%", "left": "8%", "right": "8%", "containLabel": true}, "xAxis": {"type": "value", "name": "利润", "axisLine": {"lineStyle": {"color": "#2a2f37"}}, "axisLabel": {"color": "#9fa4ad", "fontSize": 10}, "splitLine": {"lineStyle": {"color": "#2a2f37", "type": "dashed"}}}, "yAxis": {"type": "value", "name": "数量", "axisLine": {"lineStyle": {"color": "#2a2f37"}}, "axisLabel": {"color": "#9fa4ad", "fontSize": 10}, "splitLine": {"lineStyle": {"color": "#2a2f37", "type": "dashed"}}}, "series": [{"type": "scatter", "data": [[32000, 850], [13500, 1200], [10000, 3400], [22000, 650], [34000, 900], [12600, 1150], [10500, 3600], [23000, 680], [36000, 950], [14400, 1300], [10000, 3500], [24000, 700], [38000, 1000], [15300, 1400], [11000, 3700], [25000, 720], [40000, 1050], [16000, 1450], [11500, 3800], [26000, 750], [42000, 1100], [16500, 1500], [12000, 3900], [27000, 780], [24000, 630], [11000, 1000], [8000, 2600], [18000, 530], [25000, 670], [10500, 950], [8200, 2700], [19000, 560], [27000, 720], [12000, 1080], [8500, 2800], [20000, 580], [29000, 770], [12600, 1120], [9000, 2900], [21000, 610], [30000, 800], [13200, 1180], [9500, 3000], [22000, 640], [32000, 850], [13800, 1250], [9800, 3100], [23000, 670], [20000, 540], [9000, 850], [7000, 2400], [16000, 480], [21000, 570], [9000, 820], [7500, 2500], [17000, 500], [23000, 610], [10200, 920], [7800, 2600], [18000, 530], [24000, 650], [10800, 980], [8200, 2700], [19000, 560], [26000, 680], [11400, 1020], [8500, 2800], [20000, 590], [27000, 720], [12000, 1080], [9000, 2900], [21000, 620]], "symbolSize": 12, "itemStyle": {"color": "#5794F2", "opacity": 0.7}, "emphasis": {"focus": "self"}}]});
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+  </script>
+</body>
+</html>
