@@ -1,52 +1,27 @@
-"""浏览器验证 — Playwright 检查（可选依赖）。
-
-从 viz-agent-team/backend/agents/browser_test.py 提取（参考源码 commit 见 upstream-manifest.toml）。
-
-Skill 中的浏览器检查：
-- check_js_errors：JS 控制台错误
-- check_chart_rendered：图表是否渲染
-- check_dom_health：DOM 结构健康检查
-
-注意：浏览器检查是可选的，需要安装 playwright（pip install playwright && playwright install）。
-"""
+"""Playwright 浏览器质量门禁。"""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 几何工具（独立于 Playwright 的纯函数）
-# ═══════════════════════════════════════════════════════════════════════════════
-
-
 def _rects_intersect(a: dict, b: dict, min_area: int = 100) -> bool:
-    """两个矩形相交面积 > min_area 视为重叠(过滤微小接触)。"""
-    ix = max(0.0, min(a["x"] + a["w"], b["x"] + b["w"]) - max(a["x"], b["x"]))
-    iy = max(0.0, min(a["y"] + a["h"], b["y"] + b["h"]) - max(a["y"], b["y"]))
-    return ix * iy > min_area
+    width = max(0.0, min(a["x"] + a["w"], b["x"] + b["w"]) - max(a["x"], b["x"]))
+    height = max(0.0, min(a["y"] + a["h"], b["y"] + b["h"]) - max(a["y"], b["y"]))
+    return width * height > min_area
 
 
 def find_overlaps(boxes: list[dict]) -> list[str]:
-    """对盒子两两算重叠，返回描述列表。
-
-    ★ F4 修复：返回值是 list[str]，调用方应使用 isinstance 防御。
-    """
-    out: list[str] = []
-    for i in range(len(boxes)):
-        for j in range(i + 1, len(boxes)):
-            if _rects_intersect(boxes[i], boxes[j]):
-                out.append(f"chart#{i} 与 chart#{j} 边界框重叠")
-    return out
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Playwright 包装（可选依赖）
-# ═══════════════════════════════════════════════════════════════════════════════
+    issues: list[str] = []
+    for left in range(len(boxes)):
+        for right in range(left + 1, len(boxes)):
+            if _rects_intersect(boxes[left], boxes[right]):
+                issues.append(f"panel#{left} 与 panel#{right} 边界框重叠")
+    return issues
 
 
 def playwright_available() -> bool:
-    """检查 playwright 是否已安装。"""
     try:
         import playwright  # noqa: F401
         return True
@@ -54,82 +29,166 @@ def playwright_available() -> bool:
         return False
 
 
-async def check_js_errors(html_path: str) -> list[str]:
-    """打开 HTML 在 headless 浏览器中，收集 JS 控制台错误。
+async def run_browser_checks(
+    html_path: str,
+    *,
+    viewport_width: int = 1920,
+    viewport_height: int = 1080,
+    screenshot_path: str | None = None,
+) -> dict[str, Any]:
+    """打开所有页签和地图 Tab，检查真实 option、Canvas、布局和错误。"""
 
-    Requires: pip install playwright && playwright install chromium
-    """
     if not playwright_available():
-        return ["playwright 未安装，跳过浏览器检查（pip install playwright）"]
+        return {
+            "available": False,
+            "is_healthy": False,
+            "errors": ["playwright 未安装，请安装 vizagent-dashboard[browser]"],
+            "warnings": [],
+            "charts_rendered": 0,
+            "expected_charts": 0,
+        }
 
-    try:
-        from playwright.async_api import async_playwright
+    from playwright.async_api import async_playwright
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            page = await browser.new_page()
+    source = Path(html_path).resolve()
+    errors: list[str] = []
+    warnings: list[str] = []
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch()
+        page = await browser.new_page(viewport={"width": viewport_width, "height": viewport_height})
+        page.on("pageerror", lambda exc: errors.append(str(exc)))
+        page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
+        try:
+            await page.goto(source.as_uri(), wait_until="load", timeout=20_000)
+            await page.wait_for_timeout(350)
 
-            errors: list[str] = []
-            page.on("pageerror", lambda exc: errors.append(str(exc)))
-            page.on("console", lambda msg: errors.append(msg.text) if msg.type == "error" else None)
+            for selector in (".map-tab", ".page-tab"):
+                count = await page.locator(selector).count()
+                for index in range(count):
+                    await page.locator(selector).nth(index).click()
+                    await page.wait_for_timeout(80)
+            # 回到首个页签与地图，截图展示默认状态。
+            for selector in (".page-tab", ".map-tab"):
+                if await page.locator(selector).count():
+                    await page.locator(selector).first.click()
+            await page.wait_for_timeout(150)
 
-            await page.goto(f"file://{html_path}")
-            await page.wait_for_load_state("networkidle", timeout=10000)
-
+            metrics = await page.evaluate(
+                """() => {
+                  const payload = JSON.parse(document.getElementById('vizagent-chart-options')?.textContent || '[]');
+                  const charts = payload.map(entry => {
+                    const node = document.getElementById(entry.dom_id);
+                    const chart = node && window.echarts ? echarts.getInstanceByDom(node) : null;
+                    const option = chart ? chart.getOption() : null;
+                    const series = option?.series || [];
+                    const dataLengths = series.map(item => Array.isArray(item.data) ? item.data.length : 0);
+                    const rect = node?.getBoundingClientRect();
+                    return {
+                      domId: entry.dom_id,
+                      type: entry.type,
+                      initialized: Boolean(chart),
+                      width: rect?.width || 0,
+                      height: rect?.height || 0,
+                      seriesCount: series.length,
+                      dataLengths,
+                      hasData: dataLengths.some(length => length > 0),
+                    };
+                  });
+                  const panels = [...document.querySelectorAll('.panel, .kpi-card')]
+                    .filter(node => node.offsetParent)
+                    .map(node => {
+                      const rect = node.getBoundingClientRect();
+                      return {x: rect.x, y: rect.y, w: rect.width, h: rect.height};
+                    });
+                  return {
+                    charts,
+                    panels,
+                    canvasCount: document.querySelectorAll('canvas').length,
+                    scrollWidth: document.documentElement.scrollWidth,
+                    scrollHeight: document.documentElement.scrollHeight,
+                    innerWidth,
+                    innerHeight,
+                    chinaRegistered: Boolean(window.echarts?.getMap('china')),
+                    worldRegistered: Boolean(window.echarts?.getMap('world')),
+                    expectedMaps: JSON.parse(document.getElementById('vizagent-build-manifest')?.textContent || '{}').maps || [],
+                  };
+                }"""
+            )
+            if screenshot_path:
+                await page.screenshot(path=str(Path(screenshot_path).resolve()), full_page=True)
+        except Exception as exc:
+            errors.append(f"playwright 执行失败: {exc}")
+            metrics = {
+                "charts": [],
+                "panels": [],
+                "canvasCount": 0,
+                "scrollWidth": 0,
+                "scrollHeight": 0,
+                "innerWidth": viewport_width,
+                "innerHeight": viewport_height,
+                "chinaRegistered": False,
+                "worldRegistered": False,
+                "expectedMaps": [],
+            }
+        finally:
             await browser.close()
-            return errors
-    except Exception as e:
-        return [f"playwright 执行失败: {e}"]
+
+    chart_issues = []
+    for chart in metrics["charts"]:
+        if not chart["initialized"]:
+            chart_issues.append(f"{chart['domId']} 未初始化")
+        if chart["width"] <= 0 or chart["height"] <= 0:
+            chart_issues.append(f"{chart['domId']} 容器尺寸为零")
+        if chart["seriesCount"] <= 0:
+            chart_issues.append(f"{chart['domId']} 缺少 series")
+        elif not chart["hasData"]:
+            chart_issues.append(f"{chart['domId']} 没有有效数据")
+    errors.extend(chart_issues)
+
+    if "china" in metrics["expectedMaps"] and not metrics["chinaRegistered"]:
+        errors.append("中国地图未注册")
+    if "world" in metrics["expectedMaps"] and not metrics["worldRegistered"]:
+        errors.append("世界地图未注册")
+
+    overlaps = find_overlaps(metrics["panels"])
+    errors.extend(overlaps)
+    if metrics["scrollWidth"] > metrics["innerWidth"] + 2:
+        errors.append(f"页面横向溢出：{metrics['scrollWidth']}/{metrics['innerWidth']}px")
+    if metrics["scrollHeight"] > metrics["innerHeight"] + 24:
+        warnings.append(f"页面纵向滚动：{metrics['scrollHeight']}/{metrics['innerHeight']}px")
+
+    return {
+        "available": True,
+        "is_healthy": not errors,
+        "errors": errors,
+        "warnings": warnings,
+        "charts_rendered": sum(1 for chart in metrics["charts"] if chart["initialized"] and chart["hasData"]),
+        "expected_charts": len(metrics["charts"]),
+        "canvas_count": metrics["canvasCount"],
+        "maps_registered": {
+            "china": metrics["chinaRegistered"],
+            "world": metrics["worldRegistered"],
+        },
+        "overlaps": overlaps,
+        "viewport": {
+            "width": metrics["innerWidth"],
+            "height": metrics["innerHeight"],
+            "scroll_width": metrics["scrollWidth"],
+            "scroll_height": metrics["scrollHeight"],
+        },
+        "charts": metrics["charts"],
+    }
+
+
+async def check_js_errors(html_path: str) -> list[str]:
+    result = await run_browser_checks(html_path)
+    return result.get("errors", [])
 
 
 async def check_chart_rendered(html_path: str) -> dict[str, Any]:
-    """检查 HTML 中图表是否成功渲染。
-
-    Returns:
-        {"rendered": int, "total_canvases": int, "errors": [...]}
-    """
-    if not playwright_available():
-        return {"rendered": 0, "total_canvases": 0, "errors": ["playwright 未安装"]}
-
-    try:
-        from playwright.async_api import async_playwright
-
-        async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            page = await browser.new_page()
-
-            await page.goto(f"file://{html_path}")
-            await page.wait_for_load_state("networkidle", timeout=10000)
-
-            # 数 canvas 元素
-            canvas_count = await page.locator("canvas").count()
-
-            # 检查每个 canvas 是否有内容（非零尺寸）
-            rendered = 0
-            for i in range(canvas_count):
-                canvas = page.locator("canvas").nth(i)
-                box = await canvas.bounding_box()
-                if box and box["width"] > 0 and box["height"] > 0:
-                    rendered += 1
-
-            await browser.close()
-            return {"rendered": rendered, "total_canvases": canvas_count, "errors": []}
-    except Exception as e:
-        return {"rendered": 0, "total_canvases": 0, "errors": [f"playwright 执行失败: {e}"]}
-
-
-async def run_browser_checks(html_path: str) -> dict[str, Any]:
-    """综合浏览器检查：JS 错误 + 图表渲染 + DOM 健康。
-
-    Requires: pip install playwright && playwright install chromium
-    """
-    js_errors = await check_js_errors(html_path)
-    chart_info = await check_chart_rendered(html_path)
-
+    result = await run_browser_checks(html_path)
     return {
-        "available": playwright_available(),
-        "js_errors": js_errors,
-        "charts_rendered": chart_info["rendered"],
-        "total_canvases": chart_info["total_canvases"],
-        "is_healthy": len(js_errors) == 0 and chart_info["rendered"] > 0,
+        "rendered": result.get("charts_rendered", 0),
+        "total_canvases": result.get("canvas_count", 0),
+        "errors": result.get("errors", []),
     }

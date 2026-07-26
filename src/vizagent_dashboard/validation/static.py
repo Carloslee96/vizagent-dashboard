@@ -1,205 +1,225 @@
-"""静态验证 — 编译后 HTML 的质量检查。
-
-从 viz-agent-team/backend/agents/quality.py 提取（参考源码 commit 见 upstream-manifest.toml）。
-
-保留的 check_* 函数（纯静态检查，无需 LLM / 浏览器）：
-- check_html_truncation：检查 HTML 是否被截断
-- count_charts_in_html：统计图表类型和数量
-- check_overlaps：检查图表元素是否重叠（防御性：兼容 list[str] / list[dict]）
-- check_zero_size：检查零尺寸图表
-- _to_float / _is_numeric：数值清洗
-
-丢弃：
-- 所有依赖 PRD 文本匹配的 coverage 检查（在 Skill 中不适用，spec 直接表达意图）
-- LLM 驱动的评价（review_node / test_node / release_node 不在 Skill 范围内）
-"""
+"""HTML、图表数据和覆盖清单的确定性发布门禁。"""
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 工具函数
-# ═══════════════════════════════════════════════════════════════════════════════
+from vizagent_dashboard.inventory.spec import DataInventory
+from vizagent_dashboard.schemas.dashboard_spec import ChartType, DashboardSpec
 
 
-def _to_float(v: Any) -> float | None:
-    """容错转 float（剥 $,¥,%,千分位逗号）。"""
+def _to_float(value: Any) -> float | None:
     try:
-        cleaned = str(v).replace(",", "").replace("¥", "").replace("$", "").replace("%", "").strip()
+        cleaned = str(value).replace(",", "").replace("¥", "").replace("$", "").replace("%", "").strip()
         return float(cleaned) if cleaned else None
-    except (ValueError, TypeError):
+    except (TypeError, ValueError):
         return None
 
 
-def _is_numeric(v: Any) -> bool:
-    cleaned = str(v).replace(",", "").replace("¥", "").replace("$", "").replace("%", "").strip()
-    if not cleaned:
-        return False
-    try:
-        float(cleaned)
-        return True
-    except ValueError:
-        return False
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# HTML 静态检查
-# ═══════════════════════════════════════════════════════════════════════════════
+def _is_numeric(value: Any) -> bool:
+    return _to_float(value) is not None
 
 
 def check_html_truncation(html_content: str) -> dict[str, Any]:
-    """检测 HTML 是否被截断。
-
-    判断优先级：
-    1. 以 </html> 结尾 → 完整，不检查标签配对
-    2. 有 </body> 无 </html> → 可能截断
-    3. 无 </body> 无 </html> → 截断
-    """
-    issues: list[str] = []
-    truncated = False
-
-    last_200 = html_content[-200:] if len(html_content) > 200 else html_content
-    has_closing_html = "</html>" in last_200.lower()
-    has_closing_body = "</body>" in last_200.lower()
-
-    if not has_closing_html and not has_closing_body:
-        truncated = True
-        issues.append("HTML 末尾缺少 </html> 或 </body> 闭合标签")
-    elif has_closing_body and not has_closing_html:
-        truncated = True
-        issues.append("HTML 末尾缺少 </html> 闭合标签")
-
-    score = 100
-    if truncated:
-        score = max(30, 100 - len(issues) * 35)
-
+    tail = html_content[-500:].lower()
+    issues = []
+    if "</body>" not in tail:
+        issues.append("HTML 末尾缺少 </body>")
+    if "</html>" not in tail:
+        issues.append("HTML 末尾缺少 </html>")
     return {
-        "is_truncated": truncated,
-        "score": score,
+        "is_truncated": bool(issues),
+        "score": max(0, 100 - len(issues) * 50),
         "issues": issues,
         "html_length": len(html_content),
-        "has_closing_html": has_closing_html,
-        "has_closing_body": has_closing_body,
+        "has_closing_html": "</html>" in tail,
+        "has_closing_body": "</body>" in tail,
     }
 
 
+def extract_chart_entries(html_content: str) -> list[dict[str, Any]]:
+    payload = _extract_json_script(html_content, "vizagent-chart-options")
+    return payload if isinstance(payload, list) else []
+
+
+def extract_build_manifest(html_content: str) -> dict[str, Any]:
+    payload = _extract_json_script(html_content, "vizagent-build-manifest")
+    return payload if isinstance(payload, dict) else {}
+
+
 def count_charts_in_html(html_content: str) -> dict[str, int]:
-    """统计 HTML 中的 ECharts 图表类型和数量。
+    counts = {"line": 0, "bar": 0, "pie": 0, "scatter": 0, "map": 0, "kpi": 0, "table": 0, "total": 0}
+    entries = extract_chart_entries(html_content)
+    if entries:
+        counts["total"] = len(entries)
+        for entry in entries:
+            chart_type = str(entry.get("type", ""))
+            key = "map" if chart_type in {"map_china", "map_world", "map"} else chart_type
+            if key in counts:
+                counts[key] += 1
+        counts["kpi"] = len(re.findall(r'data-viz-type="kpi"', html_content))
+        counts["table"] = len(re.findall(r'data-viz-type="table"', html_content))
+        return counts
 
-    Returns:
-        {"line": 2, "bar": 1, "pie": 1, "map": 0, "kpi": 0, "total": 4}
-    """
-    counts: dict[str, int] = {"line": 0, "bar": 0, "pie": 0, "scatter": 0, "map": 0, "kpi": 0, "total": 0}
-
-    # 数 ECharts init 调用数
-    n_init = len(re.findall(r"echarts\.init\s*\(", html_content))
-    counts["total"] = n_init
-
-    # 数 series: type 出现次数（按 series 类型）
-    for series_type in ["line", "bar", "pie", "scatter", "map"]:
-        counts[series_type] = len(re.findall(rf'"type"\s*:\s*"{series_type}"', html_content))
-
-    # 数 KPI 卡片
+    counts["total"] = len(re.findall(r"echarts\.init\s*\(", html_content))
+    for chart_type in ("line", "bar", "pie", "scatter", "map"):
+        counts[chart_type] = len(re.findall(rf'"type"\s*:\s*"{chart_type}"', html_content))
     counts["kpi"] = len(re.findall(r'class="kpi-card"', html_content))
-
     return counts
 
 
-def check_overlaps(chart_options: list[Any]) -> list[str]:
-    """检查图表元素是否重叠。
-
-    防御性设计：兼容浏览器返回的 overlaps 格式（list[str] 或 list[dict]）。
-    ★ F4 修复：isinstance(o, dict) 防御 list[str] 类型。
-
-    Returns:
-        重叠描述列表（最多 3 条）。空列表表示无重叠。
-    """
+def check_chart_entries(entries: list[dict[str, Any]]) -> list[str]:
     issues: list[str] = []
-
-    if not chart_options:
-        return issues
-
-    # 简单几何检查：每个 chart option 的 grid + width/height 重叠检测
-    # （这里是简化版，真实检查由 Playwright 完成）
-    occupied: list[tuple[float, float, float, float]] = []
-
-    def overlap_area(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
-        x1 = max(a[0], b[0])
-        y1 = max(a[1], b[1])
-        x2 = min(a[2], b[2])
-        y2 = min(a[3], b[3])
-        if x2 > x1 and y2 > y1:
-            return (x2 - x1) * (y2 - y1)
-        return 0.0
-
-    for opt in chart_options:
-        if not isinstance(opt, dict):
+    seen_ids: set[str] = set()
+    for index, entry in enumerate(entries, start=1):
+        dom_id = str(entry.get("dom_id", ""))
+        chart_type = str(entry.get("type", ""))
+        option = entry.get("option")
+        if not dom_id:
+            issues.append(f"图表 {index} 缺少 dom_id")
+        elif dom_id in seen_ids:
+            issues.append(f"图表 DOM ID 重复: {dom_id}")
+        seen_ids.add(dom_id)
+        if not isinstance(option, dict):
+            issues.append(f"图表 {index} option 不是对象")
             continue
-        # 从 option 提取 grid 区域（简化）
-        grid = opt.get("grid", {})
-        rect = (0, 0, 100, 100)  # 占位，实际由浏览器检测
-        for prev in occupied:
-            if overlap_area(rect, prev) > 50:  # 阈值
-                issues.append(f"图表与已有图表重叠 ({rect} vs {prev})")
-                break
-        occupied.append(rect)
+        series = option.get("series")
+        if not isinstance(series, list) or not series:
+            issues.append(f"图表 {index}（{chart_type}）缺少 series")
+            continue
+        data_series = [item for item in series if isinstance(item, dict) and isinstance(item.get("data"), list)]
+        if not data_series or not any(item["data"] for item in data_series):
+            issues.append(f"图表 {index}（{chart_type}）没有有效数据")
+        if chart_type == "map_china":
+            if not any(item.get("type") == "map" and item.get("map") == "china" for item in series if isinstance(item, dict)):
+                issues.append(f"图表 {index} 未绑定中国地图")
+        if chart_type == "map_world":
+            uses_world = option.get("geo", {}).get("map") == "world" or any(
+                item.get("map") == "world" for item in series if isinstance(item, dict)
+            )
+            if not uses_world:
+                issues.append(f"图表 {index} 未绑定世界地图")
+    return issues
 
+
+def check_overlaps(chart_options: list[Any]) -> list[str]:
+    """兼容保留：真实几何重叠由浏览器验证。"""
+
+    issues = []
+    for option in chart_options:
+        if isinstance(option, str):
+            issues.append(option)
+        elif isinstance(option, dict) and option.get("overlap"):
+            issues.append(str(option["overlap"]))
     return issues[:3]
 
 
 def check_zero_size(chart_options: list[Any]) -> list[str]:
-    """检查是否有零尺寸图表。"""
-    issues: list[str] = []
-    for idx, opt in enumerate(chart_options):
-        if not isinstance(opt, dict):
+    issues = []
+    for index, option in enumerate(chart_options):
+        if not isinstance(option, dict):
             continue
-        series = opt.get("series", [])
-        if isinstance(series, list) and len(series) == 0:
-            issues.append(f"图表 {idx + 1} 缺少 series 数据")
+        series = option.get("series")
+        if not isinstance(series, list) or not series:
+            issues.append(f"图表 {index + 1} 缺少 series 数据")
     return issues
 
 
 def check_duplicate_maps(html_content: str) -> list[str]:
-    """检查是否包含重复地图。"""
-    issues: list[str] = []
-    map_count = len(re.findall(r"registerMap\(", html_content))
-    if map_count > 2:
-        issues.append(f"包含 {map_count} 个地图实例，超过 2 个上限")
+    """同一地图最多注册一次；中国和世界各一次是合法组合。"""
+
+    issues = []
+    for map_id in ("china", "world"):
+        count = len(re.findall(rf"registerMap\(\s*['\"]{map_id}['\"]", html_content))
+        if count > 1:
+            issues.append(f"{map_id} 地图重复注册 {count} 次")
     return issues
 
 
 def check_empty_options(html_content: str) -> list[str]:
-    """检查是否有空 ECharts option。"""
-    issues: list[str] = []
-    # 空 option 的特征：setOption({}) 后面跟逗号或空对象
-    matches = re.findall(r"setOption\(\s*\{[^}]{0,5}\}\s*\)", html_content)
-    if matches:
-        for _ in matches:
-            issues.append("ECharts option 内容为空")
-    return issues
+    return check_chart_entries(extract_chart_entries(html_content))
 
 
-def validate_html(html_content: str) -> dict[str, Any]:
-    """综合验证：跑全部静态检查，返回聚合报告。"""
-    all_issues: list[str] = []
+def validate_html(
+    html_content: str,
+    spec: DashboardSpec | None = None,
+    inventory: DataInventory | None = None,
+    manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    errors: list[str] = []
+    warnings: list[str] = []
 
-    trunc = check_html_truncation(html_content)
-    all_issues.extend(trunc["issues"])
+    truncation = check_html_truncation(html_content)
+    errors.extend(truncation["issues"])
 
-    dup_maps = check_duplicate_maps(html_content)
-    all_issues.extend(dup_maps)
+    entries = extract_chart_entries(html_content)
+    embedded_manifest = extract_build_manifest(html_content)
+    active_manifest = manifest or embedded_manifest
+    if not entries and (spec is None or any(item.chart_type != ChartType.kpi for row in spec.layout for item in row.items)):
+        errors.append("HTML 缺少机器可读图表 option 清单")
+    errors.extend(check_chart_entries(entries))
 
-    empty_opts = check_empty_options(html_content)
-    all_issues.extend(empty_opts)
+    if re.search(r'<script[^>]+src=["\']https?://', html_content, re.IGNORECASE):
+        errors.append("HTML 仍依赖外部脚本，无法离线运行")
 
+    if spec is not None:
+        expected = [
+            item for row in spec.layout for item in row.items
+            if item.chart_type not in {ChartType.kpi, ChartType.table}
+        ]
+        if len(entries) != len(expected):
+            errors.append(f"图表数量不匹配：Spec={len(expected)}，HTML={len(entries)}")
+        expected_maps = {
+            "china" if item.chart_type == ChartType.map_china else "world"
+            for item in expected
+            if item.chart_type in {ChartType.map_china, ChartType.map_world}
+        }
+        manifest_maps = set(active_manifest.get("maps", []))
+        missing_maps = expected_maps - manifest_maps
+        if missing_maps:
+            errors.append(f"地图资源缺失：{', '.join(sorted(missing_maps))}")
+
+    coverage = active_manifest.get("coverage", {})
+    if inventory is not None:
+        expected_sheets = {sheet.name: sheet.row_count for sheet in inventory.sheets if sheet.row_count > 0}
+        for sheet_name, total_rows in expected_sheets.items():
+            item = coverage.get(sheet_name)
+            if not item:
+                errors.append(f"Sheet“{sheet_name}”未进入覆盖清单")
+                continue
+            covered_rows = int(item.get("covered_rows", 0))
+            if covered_rows != total_rows:
+                errors.append(f"Sheet“{sheet_name}”覆盖不完整：{covered_rows}/{total_rows} 行")
+    elif coverage and not active_manifest.get("coverage_complete", False):
+        errors.append("数据覆盖不完整")
+    elif not coverage:
+        warnings.append("未提供 DataInventory，无法执行数据覆盖门禁")
+
+    score = max(0, 100 - len(errors) * 15 - len(warnings) * 2)
     return {
-        "is_valid": not trunc["is_truncated"] and len(all_issues) == 0,
-        "is_truncated": trunc["is_truncated"],
-        "score": trunc["score"],
-        "issues": all_issues,
+        "is_valid": not errors,
+        "score": score,
+        "errors": errors,
+        "warnings": warnings,
+        "issues": errors + warnings,
         "chart_counts": count_charts_in_html(html_content),
         "html_length": len(html_content),
+        "coverage": coverage,
+        "offline": not bool(re.search(r'<script[^>]+src=["\']https?://', html_content, re.IGNORECASE)),
     }
+
+
+def _extract_json_script(html_content: str, element_id: str) -> Any:
+    match = re.search(
+        rf'<script[^>]+id=["\']{re.escape(element_id)}["\'][^>]*>(.*?)</script>',
+        html_content,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(1).replace("<\\/", "</"))
+    except json.JSONDecodeError:
+        return None

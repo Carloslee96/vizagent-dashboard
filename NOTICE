@@ -1,0 +1,9 @@
+VizAgent Dashboard
+Copyright 2026 VizAgent Team
+
+This product bundles Apache ECharts 5.5.1, licensed under the Apache License 2.0.
+https://github.com/apache/echarts
+
+This product bundles China and world GeoJSON files distributed with
+Apache ECharts 4.9.0. Their provenance must remain listed in release SBOMs
+and must be re-audited before a public release.

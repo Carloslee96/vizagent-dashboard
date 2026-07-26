@@ -1,181 +1,303 @@
-"""CLI entry point for vizagent-dashboard."""
+"""VizAgent Dashboard CLI。"""
 
+from __future__ import annotations
+
+import asyncio
 import json
 import logging
+import os
+import tempfile
 from pathlib import Path
+from typing import Any
 
 import click
 
-from vizagent_dashboard.compiler.skeleton import compile_dashboard
-from vizagent_dashboard.inventory.reader import read_file
+from vizagent_dashboard import __version__
+from vizagent_dashboard.compiler.skeleton import compile_artifacts
+from vizagent_dashboard.inventory.reader import inventory_file
+from vizagent_dashboard.planner.heuristic import plan_dashboard
 from vizagent_dashboard.schemas.dashboard_spec import DashboardSpec
-from vizagent_dashboard.validation.static import validate_html
+from vizagent_dashboard.validation.browser import playwright_available, run_browser_checks
+from vizagent_dashboard.validation.static import extract_build_manifest, validate_html
 
 logger = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
-@click.pass_context
-def cli(ctx, verbose):
-    """vizagent-dashboard: Turn business requirements into HTML dashboards."""
+@click.version_option(__version__)
+@click.option("--verbose", "-v", is_flag=True, help="输出调试日志")
+def cli(verbose: bool) -> None:
+    """从 CSV/XLSX 和 DashboardSpec 生成可验证的离线 HTML 大屏。"""
+
     logging.basicConfig(
         level=logging.DEBUG if verbose else logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
 
-@cli.command()
-@click.option("--data", required=True, help="Path to CSV or Excel data file")
-@click.option("--requirement", default=None, help="Business requirement in natural language")
-@click.option("--spec", "spec_path", default=None, help="Path to DashboardSpec JSON file")
-@click.option("--theme", default="midnight-ops", help="Dashboard theme (see README §Themes)")
-@click.option("--output", default="./output", help="Output directory")
-@click.option("--open/--no-open", "open_browser", default=False, help="Open dashboard in browser after build")
-def build(data, requirement, spec_path, theme, output, open_browser):
-    """Build a dashboard from data file and optional spec/requirement."""
-    output_path = Path(output)
-    output_path.mkdir(parents=True, exist_ok=True)
+@cli.command("inventory")
+@click.option("--data", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--output", type=click.Path(dir_okay=False, path_type=Path), default=Path("data.inventory.json"))
+def inventory_command(data: Path, output: Path) -> None:
+    """盘点数据文件，不调用模型。"""
 
-    click.echo(f"[build] Building dashboard from {data}...")
-    click.echo(f"   Theme: {theme}")
-
-    # 1. 读取数据
     try:
-        sheets = read_file(data)
-        # 取第一个 sheet 的数据（或合并所有 sheet）
-        if len(sheets) == 1:
-            excel_data = list(sheets.values())[0]
-        else:
-            # 多 sheet：合并所有数据（保留 sheet 字段以便区分）
-            excel_data = []
-            for sheet_name, rows in sheets.items():
-                for row in rows:
-                    row_with_sheet = dict(row)
-                    row_with_sheet["sheet"] = sheet_name
-                    excel_data.append(row_with_sheet)
-        click.echo(f"   Data: {len(excel_data)} rows, {len(sheets)} sheet(s)")
-    except Exception as e:
-        click.echo(f"[FAIL] Failed to read data: {e}", err=True)
-        raise click.Abort()
+        inventory, _ = inventory_file(data)
+        _write_json(output, inventory.model_dump(mode="json"))
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Inventory: {len(inventory.sheets)} sheet(s), {inventory.total_rows} row(s)")
+    click.echo(f"Written: {output.resolve()}")
 
-    # 2. 加载或构造 DashboardSpec
-    if spec_path:
-        try:
-            with open(spec_path, encoding="utf-8") as f:
-                spec_data = json.load(f)
-            spec = DashboardSpec(**spec_data)
-            click.echo(f"   Spec: loaded from {spec_path}")
-        except Exception as e:
-            click.echo(f"[FAIL] Failed to load spec: {e}", err=True)
-            raise click.Abort()
-    else:
-        # 默认 spec：基于数据自动推断
-        spec = _auto_spec(excel_data, requirement, theme)
-        click.echo(f"   Spec: auto-generated ({len(spec.layout)} rows)")
 
-    # 3. 编译 HTML
+@cli.command("plan")
+@click.option("--data", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--requirement", default="", help="业务需求；确定性规划器不会调用外部模型")
+@click.option("--theme", default=None, help="主题 ID")
+@click.option("--page-mode", type=click.Choice(["single_page", "tabs"]), default=None)
+@click.option("--output", type=click.Path(dir_okay=False, path_type=Path), default=Path("dashboard.spec.json"))
+def plan_command(data: Path, requirement: str, theme: str | None, page_mode: str | None, output: Path) -> None:
+    """根据所有 Sheet 生成覆盖完整的基础 DashboardSpec。"""
+
     try:
-        html_content = compile_dashboard(
+        inventory, sheets = inventory_file(data)
+        spec = plan_dashboard(inventory, sheets, requirement, theme, page_mode)
+        _write_json(output, spec.model_dump(mode="json"))
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Spec: {sum(len(row.items) for row in spec.layout)} visual(s)")
+    click.echo(f"Written: {output.resolve()}")
+
+
+@cli.command("compile")
+@click.option("--data", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--spec", "spec_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--theme", default=None, help="显式覆盖 Spec 主题")
+@click.option("--deployment", type=click.Choice(["embedded", "cdn"]), default="embedded", show_default=True)
+@click.option("--output", "output_dir", type=click.Path(file_okay=False, path_type=Path), default=Path("output"))
+@click.option("--browser/--no-browser", default=False, help="使用 Playwright 执行浏览器门禁")
+def compile_command(
+    data: Path,
+    spec_path: Path,
+    theme: str | None,
+    deployment: str,
+    output_dir: Path,
+    browser: bool,
+) -> None:
+    """使用现有 Spec 编译大屏。"""
+
+    spec = _load_spec(spec_path)
+    _execute_build(data, spec, theme, deployment, output_dir, browser)
+
+
+@cli.command("validate")
+@click.option("--data", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--spec", "spec_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--html", "html_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--browser/--no-browser", default=False, help="使用 Playwright 执行浏览器门禁")
+@click.option("--screenshot", type=click.Path(dir_okay=False, path_type=Path), default=None)
+@click.option("--output", type=click.Path(dir_okay=False, path_type=Path), default=Path("validation.report.json"))
+def validate_command(
+    data: Path,
+    spec_path: Path,
+    html_path: Path,
+    browser: bool,
+    screenshot: Path | None,
+    output: Path,
+) -> None:
+    """验证已有 HTML、Spec 和数据覆盖契约。"""
+
+    try:
+        inventory, _ = inventory_file(data)
+        spec = _load_spec(spec_path)
+        html_content = html_path.read_text(encoding="utf-8")
+        report = validate_html(
+            html_content,
             spec=spec,
-            excel_data=excel_data,
-            theme_id=theme,
-            deployment_mode="cdn",
+            inventory=inventory,
+            manifest=extract_build_manifest(html_content),
         )
-    except Exception as e:
-        click.echo(f"[FAIL] Compilation failed: {e}", err=True)
-        raise click.Abort()
-
-    # 4. 验证
-    report = validate_html(html_content)
-    click.echo(f"   Validation: {'[OK] OK' if report['is_valid'] else '⚠ ' + str(len(report['issues'])) + ' issue(s)'}")
-    if report["issues"]:
-        for issue in report["issues"][:5]:
-            click.echo(f"     - {issue}")
-
-    # 5. 写入输出
-    output_file = output_path / "output.html"
-    output_file.write_text(html_content, encoding="utf-8")
-
-    click.echo(f"[OK] Dashboard generated → {output_file.absolute()}")
-    click.echo(f"   HTML: {report['html_length']} bytes")
-    click.echo(f"   Charts: {report['chart_counts']}")
-
-    if open_browser:
-        click.launch(str(output_file.absolute()))
+        _attach_browser_report(report, html_path, browser, screenshot)
+        _write_json(output, report)
+    except click.exceptions.Exit:
+        raise
+    except click.exceptions.Exit:
+        raise
+    except click.ClickException:
+        raise
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
+    _echo_report(report)
+    if not report["is_valid"]:
+        raise click.exceptions.Exit(4)
 
 
-def _auto_spec(excel_data: list[dict], requirement: str | None, theme: str) -> DashboardSpec:
-    """从数据自动推断 DashboardSpec。
+@cli.command("build")
+@click.option("--data", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--requirement", default="", help="业务需求；不调用外部模型")
+@click.option("--spec", "spec_path", default=None, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--theme", default=None, help="显式覆盖 Spec 或自动主题")
+@click.option("--page-mode", type=click.Choice(["single_page", "tabs"]), default=None)
+@click.option("--deployment", type=click.Choice(["embedded", "cdn"]), default="embedded", show_default=True)
+@click.option("--output", "output_dir", type=click.Path(file_okay=False, path_type=Path), default=Path("output"))
+@click.option("--browser/--no-browser", default=False, help="使用 Playwright 执行浏览器门禁")
+@click.option("--open/--no-open", "open_browser", default=False, help="成功后打开 HTML")
+def build_command(
+    data: Path,
+    requirement: str,
+    spec_path: Path | None,
+    theme: str | None,
+    page_mode: str | None,
+    deployment: str,
+    output_dir: Path,
+    browser: bool,
+    open_browser: bool,
+) -> None:
+    """盘点、规划、编译并验证大屏。"""
 
-    启发式：
-    - 顶部 1 行 KPI（第一个数值列的 sum）
-    - 中间 1 行 折线图（按首个时间列分组的第一个数值列）
-    - 底部 1 行 柱状图（按首个分类列分组的第一个数值列）
-    """
-    from vizagent_dashboard.schemas.dashboard_spec import ChartItem, LayoutRow
+    try:
+        inventory, sheets = inventory_file(data)
+        if spec_path:
+            spec = _load_spec(spec_path)
+        else:
+            spec = plan_dashboard(inventory, sheets, requirement, theme, page_mode)
+        html_path, report = _execute_build(
+            data,
+            spec,
+            theme if spec_path else None,
+            deployment,
+            output_dir,
+            browser,
+            inventory=inventory,
+            sheets=sheets,
+        )
+    except click.ClickException:
+        raise
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
 
-    if not excel_data:
-        return DashboardSpec(title="数据大屏", theme=theme)
-
-    cols = list(excel_data[0].keys())
-    # 分类列（找可能的字段名）
-    cat_col = next((c for c in cols if any(kw in c.lower() for kw in ["month", "category", "type", "name", "月", "类别", "名称", "类型", "地区"])), cols[0] if cols else "")
-    # 数值列
-    num_col = next((c for c in cols if any(kw in c.lower() for kw in ["value", "amount", "count", "sales", "值", "金额", "数量", "销售", "收入"])), "")
-    if not num_col:
-        # fallback：选第一个数值型列
-        for c in cols:
-            try:
-                float(str(excel_data[0].get(c, "0")).replace(",", "").replace("¥", "").replace("%", ""))
-                num_col = c
-                break
-            except (ValueError, TypeError):
-                continue
-
-    title = "数据大屏"
-    if requirement:
-        # 从需求中提取标题关键词
-        title = f"数据分析大屏"
-
-    layout = [
-        LayoutRow(items=[
-            ChartItem(
-                chart_type="kpi",
-                title=f"总{num_col}" if num_col else "数据",
-                data_field=num_col,
-                aggregation="sum",
-                width=1,
-                height=1,
-            ),
-        ]),
-        LayoutRow(items=[
-            ChartItem(
-                chart_type="line",
-                title=f"{num_col} 趋势" if num_col else "趋势",
-                x_field=cat_col,
-                y_field=num_col,
-                width=2,
-                height=1,
-            ),
-        ]),
-        LayoutRow(items=[
-            ChartItem(
-                chart_type="bar",
-                title=f"各{cat_col}{num_col}对比" if cat_col and num_col else "对比",
-                x_field=cat_col,
-                y_field=num_col,
-                width=2,
-                height=1,
-            ),
-        ]),
-    ]
-
-    return DashboardSpec(title=title, theme=theme, layout=layout)
+    if open_browser and report["is_valid"]:
+        click.launch(str(html_path.resolve()))
 
 
-def main():
-    """Entry point for the CLI."""
+def _execute_build(
+    data: Path,
+    spec: DashboardSpec,
+    theme: str | None,
+    deployment: str,
+    output_dir: Path,
+    browser: bool,
+    *,
+    inventory: Any | None = None,
+    sheets: dict[str, list[dict[str, Any]]] | None = None,
+) -> tuple[Path, dict[str, Any]]:
+    try:
+        if inventory is None or sheets is None:
+            inventory, sheets = inventory_file(data)
+        compiled = compile_artifacts(
+            spec,
+            sheets,
+            theme_id=theme,
+            deployment_mode=deployment,
+            inventory=inventory,
+        )
+        report = validate_html(
+            compiled.html,
+            spec=spec,
+            inventory=inventory,
+            manifest=compiled.manifest,
+        )
+
+        output_dir = output_dir.resolve()
+        output_dir.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix=".vizagent-build-", dir=output_dir.parent) as temp_name:
+            temporary = Path(temp_name)
+            temporary_html = temporary / "output.html"
+            temporary_html.write_text(compiled.html, encoding="utf-8")
+            _attach_browser_report(report, temporary_html, browser, temporary / "screenshot.png" if browser else None)
+            _write_json(temporary / "dashboard.spec.json", spec.model_dump(mode="json"))
+            _write_json(temporary / "data.inventory.json", inventory.model_dump(mode="json"))
+            _write_json(temporary / "validation.report.json", report)
+            _write_json(temporary / "build-manifest.json", compiled.manifest)
+
+            output_dir.mkdir(parents=True, exist_ok=True)
+            for name in (
+                "output.html",
+                "dashboard.spec.json",
+                "data.inventory.json",
+                "validation.report.json",
+                "build-manifest.json",
+                "screenshot.png",
+            ):
+                source = temporary / name
+                if source.exists():
+                    os.replace(source, output_dir / name)
+        html_path = output_dir / "output.html"
+    except Exception as exc:
+        if isinstance(exc, click.ClickException):
+            raise
+        raise click.ClickException(str(exc)) from exc
+
+    click.echo(f"Generated: {html_path}")
+    click.echo(f"Coverage: {'complete' if compiled.manifest['coverage_complete'] else 'incomplete'}")
+    _echo_report(report)
+    if not report["is_valid"]:
+        raise click.exceptions.Exit(4)
+    return html_path, report
+
+
+def _attach_browser_report(
+    report: dict[str, Any],
+    html_path: Path,
+    browser: bool,
+    screenshot: Path | None,
+) -> None:
+    if browser:
+        if not playwright_available():
+            report["errors"].append("请求了浏览器验证，但 Playwright 未安装")
+            report["issues"] = report["errors"] + report["warnings"]
+            report["is_valid"] = False
+            return
+        browser_report = asyncio.run(
+            run_browser_checks(
+                str(html_path),
+                screenshot_path=str(screenshot) if screenshot else None,
+            )
+        )
+        report["browser"] = browser_report
+        report["errors"].extend(browser_report.get("errors", []))
+        report["warnings"].extend(browser_report.get("warnings", []))
+        report["is_valid"] = report["is_valid"] and browser_report.get("is_healthy", False)
+    else:
+        report["browser"] = {"available": playwright_available(), "executed": False}
+        report["warnings"].append("未执行浏览器门禁")
+    report["issues"] = report["errors"] + report["warnings"]
+    report["score"] = max(0, 100 - len(report["errors"]) * 15 - len(report["warnings"]) * 2)
+
+
+def _load_spec(path: Path) -> DashboardSpec:
+    try:
+        return DashboardSpec.model_validate_json(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise click.ClickException(f"DashboardSpec 无效: {exc}") from exc
+
+
+def _write_json(path: Path, value: Any) -> None:
+    path = path.resolve()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _echo_report(report: dict[str, Any]) -> None:
+    status = "PASS" if report["is_valid"] else "FAIL"
+    click.echo(f"Validation: {status} ({report['score']}/100)")
+    for issue in report.get("errors", [])[:8]:
+        click.echo(f"  ERROR: {issue}")
+    for issue in report.get("warnings", [])[:4]:
+        click.echo(f"  WARN: {issue}")
+
+
+def main() -> None:
     cli()
 
 

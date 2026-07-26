@@ -1,0 +1,4 @@
+interface:
+  display_name: "VizAgent Dashboard Builder"
+  short_description: "从 CSV/XLSX 生成并验证离线 HTML 数据大屏"
+  default_prompt: "使用 $build-data-dashboard 分析数据文件，生成 DashboardSpec，编译离线 HTML 大屏并完成数据覆盖与浏览器验证。"

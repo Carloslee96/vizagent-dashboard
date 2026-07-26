@@ -1,32 +1,37 @@
-"""Data inventory schema definitions."""
+"""数据盘点契约。"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field
 
-@dataclass
-class ColumnInfo:
-    """Metadata about a single column in a dataset."""
+
+class ColumnInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
-    dtype: str  # "numeric", "text", "date", "categorical"
+    dtype: str
     null_count: int = 0
-    unique_values: list[Any] | None = None
-    min: float | None = None
-    max: float | None = None
+    unique_count: int = 0
+    sample_values: list[Any] = Field(default_factory=list)
+    minimum: float | str | None = None
+    maximum: float | str | None = None
 
 
-@dataclass
-class SheetInfo:
-    """Metadata about a single sheet/table."""
+class SheetInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     row_count: int
-    columns: list[ColumnInfo] = field(default_factory=list)
+    columns: list[ColumnInfo] = Field(default_factory=list)
 
 
-@dataclass
-class DataInventory:
-    """Complete inventory of all data sources."""
-    sheets: list[SheetInfo] = field(default_factory=list)
+class DataInventory(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: str = "1.0"
     source_path: str = ""
+    source_sha256: str = ""
+    total_rows: int = 0
+    sheets: list[SheetInfo] = Field(default_factory=list)
