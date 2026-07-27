@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from vizagent_dashboard.compiler.charts import select_chart_type_by_hint
 from vizagent_dashboard.inventory.spec import DataInventory, SheetInfo
 from vizagent_dashboard.schemas.dashboard_spec import ChartItem, ChartType, DashboardSpec, LayoutRow, PageMode
 
@@ -138,11 +139,11 @@ def _plan_sheet_chart(
     if explicit:
         chart_type = explicit
     elif time_field and values:
-        chart_type = ChartType.line
+        chart_type = _hint_type("time_series", ChartType.line)
     elif values and any(word in value_field.lower() for word in _RATIO_WORDS) and len(rows) <= 12:
-        chart_type = ChartType.pie
+        chart_type = _hint_type("composition", ChartType.pie)
     elif values:
-        chart_type = ChartType.bar
+        chart_type = _hint_type("comparison", ChartType.bar)
     else:
         chart_type = ChartType.table
 
@@ -189,6 +190,12 @@ def _explicit_chart_type(requirement: str) -> ChartType | None:
         (("表格", "明细"), ChartType.table),
     )
     return next((chart_type for words, chart_type in patterns if any(word in requirement for word in words)), None)
+
+
+def _hint_type(hint: str, fallback: ChartType) -> ChartType:
+    """按 data_hints 从注册表选型；无匹配回退 fallback（保行为不变）。"""
+    chart_type = select_chart_type_by_hint(hint)
+    return ChartType(chart_type) if chart_type else fallback
 
 
 def _infer_theme(requirement: str) -> str:

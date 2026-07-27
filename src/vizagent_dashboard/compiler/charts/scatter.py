@@ -9,6 +9,8 @@ from vizagent_dashboard.compiler.charts._common import ChartContext, _clean_numb
 
 
 class ScatterBuilder:
+    data_hints = ("correlation",)
+
     def build(self, ctx: ChartContext) -> str:
         base: dict[str, Any] = ctx.base
         if len(ctx.y_fields) < 2:

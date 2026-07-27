@@ -9,6 +9,8 @@ from vizagent_dashboard.compiler.charts._common import ChartContext, _clean_numb
 
 
 class PieBuilder:
+    data_hints = ("composition",)
+
     def build(self, ctx: ChartContext) -> str:
         base: dict[str, Any] = ctx.base
         if not ctx.y_fields:

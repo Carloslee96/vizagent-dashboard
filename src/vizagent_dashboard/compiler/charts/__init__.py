@@ -25,12 +25,17 @@ _DEFAULT_PALETTE = ["#2D5BFF", "#5B8AFF", "#8AAEFF", "#B4CCFF", "#3DAB63"]
 class ChartBuilder(Protocol):
     """单个图表类型的 ECharts option 构造器。"""
 
+    data_hints: tuple[str, ...]
+    """数据形态提示，供 planner 选型匹配（如 time_series/composition/comparison/correlation）。"""
+
     def build(self, ctx: ChartContext) -> str:
         """返回 ECharts option JSON 字符串。"""
         ...
 
 
 # 显式注册表：chart_type → builder。line/area 共用 LineBuilder。
+# 约定：同一 data_hints 的「默认类型」先注册——select_chart_type_by_hint 按注册顺序
+# 取第一个匹配者，因此 time_series 默认命中 line（早于 area）、composition 默认命中 pie。
 _line_builder = LineBuilder()
 CHART_BUILDERS: dict[str, ChartBuilder] = {
     "line": _line_builder,
@@ -39,6 +44,14 @@ CHART_BUILDERS: dict[str, ChartBuilder] = {
     "pie": PieBuilder(),
     "scatter": ScatterBuilder(),
 }
+
+
+def select_chart_type_by_hint(hint: str) -> str:
+    """按 data_hints 选型：返回第一个（注册顺序）含该 hint 的 chart_type，无匹配返回空串。"""
+    for chart_type, builder in CHART_BUILDERS.items():
+        if hint in getattr(builder, "data_hints", ()):
+            return chart_type
+    return ""
 
 
 def build_chart_option(

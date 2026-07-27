@@ -27,6 +27,13 @@
 
 ## [Unreleased]
 
+### Planner 用 data_hints 选型（P3）
+
+- **builder 自声明 data_hints**：`ChartBuilder` Protocol 加 `data_hints` 类属性；line/area=`time_series`、bar=`comparison`、pie=`composition`、scatter=`correlation`。新增 `select_chart_type_by_hint(hint)` 按注册顺序取第一个匹配者（约定：同 hint 的默认类型先注册，故 time_series→line、composition→pie）。
+- **planner 解耦**：`heuristic.py` 自动推断从硬编码 `ChartType.line/pie/bar` 改为 `_hint_type(hint, fallback)` 走注册表；显式「只展示 X」、map/kpi/table special-case 不变。**选型行为完全不变**（先补 `test_planner.py` 9 个回归基线兜底）。
+- 价值：新图表类型声明 hints 即可被 planner 选型机制识别，不必改 planner 选型分支。
+- 测试：新增 `test_planner.py`；build_chart_option 8 case 字节级仍一致；114 passed。
+
 ### 用户主题目录（P5）
 
 - **多源主题扫描**：`compiler/themes.py` 加载顺序为 包内 `assets/*.md` → 用户 `~/.vizagent/themes/*.md` → `--theme-dir <path>`，同 id 后者覆盖前者；`set_theme_dir()` 清缓存确保覆盖立即生效。

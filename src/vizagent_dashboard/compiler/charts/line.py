@@ -11,6 +11,8 @@ from vizagent_dashboard.compiler.charts._common import ChartContext, _clean_numb
 class LineBuilder:
     """处理 line 与 area（area 在 line 基础上追加 areaStyle）。"""
 
+    data_hints = ("time_series",)
+
     def build(self, ctx: ChartContext) -> str:
         base: dict[str, Any] = ctx.base
         valid_y = [y for y in ctx.y_fields if any(_clean_number(row.get(y)) is not None for row in ctx.data)]
