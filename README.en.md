@@ -46,7 +46,7 @@ vizagent build --data sales.xlsx
 - **📁 CSV / Excel multi-sheet**: reads multiple sheets, tracks per-sheet and per-row data coverage.
 - **✅ Built-in quality gates**: auto-checks for truncation, empty data, zero-size charts, unbound maps, missing fields; optional Playwright browser gate.
 - **🔒 Secure by default**: HTML escaping + Content Security Policy + path traversal protection.
-- **🤖 Works as an Agent Skill**: load it as a Claude Code / Codex skill and let your own AI analyze the data and author smarter dashboard specs.
+- **🤖 Works as an Agent Skill**: load it as a Claude Code / Cursor / Codex skill (`vizagent skill install`) and let your own AI analyze the data and author smarter dashboard specs.
 
 ---
 
@@ -195,21 +195,30 @@ vizagent compile  --data <file> --spec <spec.json> --output dashboard/
 vizagent validate --data <file> --spec <spec.json> --html dashboard/output.html
 ```
 
-### Use as a Claude Code Skill
+### Use as a Skill in AI coding tools
 
-After pip install, one command installs the skill definition to your user-level directory. Restart Claude Code and trigger it with the `/vizagent-dashboard` slash command:
+After pip install, one command installs the rule files to your user-level directory. Restart the tool and trigger it. Supports Claude Code, Cursor, and Codex CLI:
 
 ```bash
 pip install vizagent-dashboard
-vizagent skill install          # installs to ~/.claude/skills/vizagent-dashboard/
-# restart Claude Code, type /vizagent-dashboard or just say "build a dashboard from xx.xlsx"
+vizagent skill install                # default: Claude Code
+vizagent skill install --target all   # install for Claude + Cursor + Codex at once
+# or single: --target cursor / --target codex
 ```
 
-To only print the bundled skill path: `vizagent skill path`.
+Trigger per tool:
 
-> Cloning this repo and opening it in Claude Code auto-registers it as a project-level skill (repo-root `.claude/skills/vizagent-dashboard/`), no manual install needed.
+| Tool | Install location | How to trigger |
+|---|---|---|
+| Claude Code | `~/.claude/skills/vizagent-dashboard/` | `/vizagent-dashboard`, or say "build a dashboard from xx.xlsx" |
+| Cursor | `~/.cursor/rules/vizagent-dashboard.mdc` | auto-injected when editing .xlsx/.csv, or @-mention in chat |
+| Codex CLI | `~/.codex/prompts/vizagent-dashboard.md` | `/vizagent-dashboard` |
+
+Print bundled rule file paths: `vizagent skill path [--target all]`.
+
+> Cloning this repo and opening it in any of these tools auto-loads the project-level rules (repo-root `.claude/skills/`, `.cursor/rules/`, `.codex/prompts/`), no manual install needed.
 >
-> Codex users use `skills/build-data-dashboard/` (ships `agents/openai.yaml`).
+> The legacy `skills/build-data-dashboard/` (ships `agents/openai.yaml`) remains for other agent frameworks.
 
 ---
 

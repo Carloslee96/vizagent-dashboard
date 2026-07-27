@@ -1,5 +1,17 @@
 # vizagent-dashboard 更新日志
 
+## [0.1.3] - 2026-07-27
+
+### 多 AI 工具 Skill 安装 + 安装提示语
+
+- **Cursor 支持**：新增 `.cursor/rules/vizagent-dashboard.mdc`（按 .csv/.xlsx glob 自动注入），clone 即用。
+- **Codex CLI 支持**：新增 `.codex/prompts/vizagent-dashboard.md`（`/vizagent-dashboard` 斜杠命令），clone 即用。
+- **`vizagent skill install --target`**：支持 `claude`（默认）/ `cursor` / `codex` / `all`，一次装齐多个工具到用户级目录。
+- **安装提示语**：`skill install` 成功后打印各工具触发方式 + 命令行直跑示例 + 文档链接；Windows GBK 控制台强制 UTF-8 输出避免乱码。
+- **wheel 打包 3 套规则文件**：pyproject `force-include` 映射 SKILL.md / cursor .mdc / codex .md 进 `skill_assets/`。
+- **契约测试**：新增 `test_skill_install_all_targets` / `test_skill_path_all_targets`；干净 venv 装 wheel 实测三工具全装上。
+- README 中英两版「作为 Skill 使用」章节扩成多工具表。
+
 ## [0.1.2] - 2026-07-27
 
 ### Claude Code Skill 开箱即用（治本）

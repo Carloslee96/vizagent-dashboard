@@ -136,7 +136,7 @@ def test_skill_path_command(runner):
     """vizagent skill path 能定位打包的 SKILL.md。"""
     result = runner.invoke(cli, ["skill", "path"])
     assert result.exit_code == 0, result.output
-    p = Path(result.output.strip())
+    p = Path(result.output.split(":", 1)[1].strip())
     assert p.exists()
     content = p.read_text(encoding="utf-8")
     assert "name: vizagent-dashboard" in content
@@ -153,3 +153,30 @@ def test_skill_install_command(runner, tmp_path, monkeypatch):
     content = dest.read_text(encoding="utf-8")
     assert "name: vizagent-dashboard" in content
     assert "user-invocable: true" in content
+
+
+def test_skill_install_all_targets(runner, tmp_path, monkeypatch):
+    """vizagent skill install --target all 装齐 Claude/Cursor/Codex 三套规则文件。"""
+    monkeypatch.setattr("vizagent_dashboard.cli.Path.home", lambda: tmp_path)
+    result = runner.invoke(cli, ["skill", "install", "--target", "all"])
+    assert result.exit_code == 0, result.output
+    expected = {
+        "claude": tmp_path / ".claude" / "skills" / "vizagent-dashboard" / "SKILL.md",
+        "cursor": tmp_path / ".cursor" / "rules" / "vizagent-dashboard.mdc",
+        "codex": tmp_path / ".codex" / "prompts" / "vizagent-dashboard.md",
+    }
+    for tool, dest in expected.items():
+        assert dest.exists(), f"{tool} skill missing: {dest}"
+    assert "user-invocable: true" in expected["claude"].read_text(encoding="utf-8")
+    assert "alwaysApply" in expected["cursor"].read_text(encoding="utf-8")
+    assert "vizagent build" in expected["codex"].read_text(encoding="utf-8")
+    # 提示语应列出三个工具
+    assert "claude" in result.output and "cursor" in result.output and "codex" in result.output
+
+
+def test_skill_path_all_targets(runner):
+    """vizagent skill path --target all 列出三个工具的打包路径。"""
+    result = runner.invoke(cli, ["skill", "path", "--target", "all"])
+    assert result.exit_code == 0, result.output
+    for tool in ("claude", "cursor", "codex"):
+        assert tool in result.output

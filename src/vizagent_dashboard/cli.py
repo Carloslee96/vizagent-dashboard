@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -178,42 +179,100 @@ def build_command(
         click.launch(str(html_path.resolve()))
 
 
+# 各 AI 工具的 Skill 规则文件：包内数据文件名 + 仓库相对路径 + 用户级目标路径
+_SKILL_TARGETS: dict[str, tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]] = {
+    "claude": (
+        ("skill_assets/SKILL.md",),
+        (".claude/skills/vizagent-dashboard/SKILL.md",),
+        (".claude", "skills", "vizagent-dashboard", "SKILL.md"),
+    ),
+    "cursor": (
+        ("skill_assets/cursor-vizagent-dashboard.mdc",),
+        (".cursor/rules/vizagent-dashboard.mdc",),
+        (".cursor", "rules", "vizagent-dashboard.mdc"),
+    ),
+    "codex": (
+        ("skill_assets/codex-vizagent-dashboard.md",),
+        (".codex/prompts/vizagent-dashboard.md",),
+        (".codex", "prompts", "vizagent-dashboard.md"),
+    ),
+}
+
+_TOOL_USAGE = {
+    "claude": "重启 Claude Code → 输入 /vizagent-dashboard，或说「用 xx.xlsx 做个大屏」",
+    "cursor": "重启 Cursor → 编辑 .xlsx/.csv 时自动注入规则，或在对话 @ 引用",
+    "codex": "重启 Codex CLI → 输入 /vizagent-dashboard 触发",
+}
+
+
 @cli.command("skill")
 @click.argument("action", type=click.Choice(["install", "path"]))
-def skill_command(action: str) -> None:
-    """安装或查看 Claude Code Skill 定义。
+@click.option("--target", "-t", type=click.Choice(["claude", "cursor", "codex", "all"]),
+              default="claude", show_default=True, help="目标 AI 编程工具")
+def skill_command(action: str, target: str) -> None:
+    """安装或查看 Skill 定义（Claude Code / Cursor / Codex CLI）。
 
-    install：把打包的 SKILL.md 拷到 ~/.claude/skills/vizagent-dashboard/，重启 Claude Code 后可用 /vizagent-dashboard 触发。
-    path：打印打包的 SKILL.md 路径。
+    install：把对应工具的规则文件装到用户级目录，重启该工具后生效。
+    path：打印打包的规则文件路径。
     """
 
-    src = _find_skill_md()
-    if src is None:
-        raise click.ClickException("未找到打包的 SKILL.md，请升级 vizagent-dashboard")
+    targets = list(_SKILL_TARGETS) if target == "all" else [target]
     if action == "path":
-        click.echo(str(src))
+        for t in targets:
+            src = _find_skill_file(t)
+            click.echo(f"{t}: {src}" if src else f"{t}: 未找到（请升级 vizagent-dashboard）")
         return
-    dest = Path.home() / ".claude" / "skills" / "vizagent-dashboard" / "SKILL.md"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
-    click.echo(f"Skill 已安装: {dest}")
-    click.echo("重启 Claude Code 后即可用 /vizagent-dashboard 触发。")
+    installed: list[tuple[str, Path]] = []
+    for t in targets:
+        src = _find_skill_file(t)
+        if src is None:
+            click.echo(f"[跳过] {t}: 未找到打包文件")
+            continue
+        dest = Path.home().joinpath(*_SKILL_TARGETS[t][2])
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        installed.append((t, dest))
+    if not installed:
+        raise click.ClickException("未找到任何打包的 Skill 文件，请升级 vizagent-dashboard")
+    _echo_install_hint(installed)
 
 
-def _find_skill_md() -> Path | None:
-    """定位打包的 SKILL.md：优先包内数据（wheel），回退仓库相对路径（editable/clone）。"""
+def _echo_install_hint(installed: list[tuple[str, Path]]) -> None:
+    """安装成功后打印快速上手提示。"""
     import contextlib
 
+    # Windows GBK 控制台打印中文符号会崩，强制 UTF-8 输出
+    with contextlib.suppress(Exception):
+        sys.stdout.reconfigure(encoding="utf-8")
+    click.echo(f"[OK] 已安装 {len(installed)} 个 Skill 文件：")
+    for t, dest in installed:
+        click.echo(f"  - {t:6} → {dest}")
+        click.echo(f"           使用：{_TOOL_USAGE[t]}")
+    click.echo("")
+    click.echo("命令行直跑（不依赖 AI 工具）：")
+    click.echo("  vizagent build --data 你的数据.xlsx --open")
+    click.echo("")
+    click.echo("文档与示例数据：https://github.com/Carloslee96/vizagent-dashboard")
+    click.echo("主题与参数速查：vizagent --help")
+
+
+def _find_skill_file(target: str) -> Path | None:
+    """定位某目标的规则文件：优先包内数据（wheel），回退仓库相对路径（editable/clone）。"""
+    import contextlib
+
+    bundled_names, repo_paths, _ = _SKILL_TARGETS[target]
     with contextlib.suppress(ImportError, AttributeError, FileNotFoundError, TypeError):
         from importlib.resources import files
 
-        pkg = Path(str(files("vizagent_dashboard") / "skill_assets" / "SKILL.md"))
-        if pkg.exists():
-            return pkg
+        for name in bundled_names:
+            pkg = Path(str(files("vizagent_dashboard") / name))
+            if pkg.exists():
+                return pkg
     for base in Path(__file__).resolve().parents:
-        cand = base / ".claude" / "skills" / "vizagent-dashboard" / "SKILL.md"
-        if cand.exists():
-            return cand
+        for rp in repo_paths:
+            cand = base.joinpath(*rp.split("/"))
+            if cand.exists():
+                return cand
     return None
 
 

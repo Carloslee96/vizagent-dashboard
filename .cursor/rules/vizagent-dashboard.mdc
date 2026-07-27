@@ -1,0 +1,34 @@
+---
+description: Build offline HTML dashboards from CSV/XLSX data. Use when the user wants to visualize spreadsheet data, make a dashboard / 大屏 / 看板, or analyze data trends from a data file.
+globs: ["*.csv", "*.xlsx", "*.xls"]
+alwaysApply: false
+---
+
+# vizagent-dashboard
+
+Turn the user's CSV/Excel into a single offline HTML dashboard via the `vizagent` CLI. No database, no server, no API key — the compiler is deterministic and reproducible.
+
+## Prerequisite
+
+`pip install vizagent-dashboard` if `vizagent` is not on PATH.
+
+## Workflow
+
+1. Confirm the data file path. If not given, ask the user.
+2. (optional but recommended) `vizagent inventory --data <file>` — read `data.inventory.json` for sheet names, columns, dtypes, row counts. **Never guess column names.**
+3. Build the dashboard:
+   - **Auto** (default, no spec needed): `vizagent build --data <file>` — auto-selects charts by field type (date → line, geography → map, ratio → pie, other categorical → bar).
+   - **Tweak**: `vizagent build --data <file> --requirement "只展示饼图，浅色主题，分页展示"`.
+   - **Spec mode** (full control): `vizagent plan --data <file> --requirement "..." --output spec.json` → edit spec → `vizagent compile --data <file> --spec spec.json` → `vizagent validate --data <file> --spec spec.json --html output/output.html`.
+4. Report the output path. `output/output.html` is self-contained (ECharts inlined); double-click to open. Add `--open` to auto-open in the browser.
+
+## Themes
+
+`midnight-ops` (default) · `paper-light` · `warm-editorial` · `clinical-light` · `signal-dark`
+
+## Tips
+
+- China map: use full province names ("广东省", not "广东"). The compiler normalizes autonomous regions.
+- KPI cards go in the first row.
+- Iterate until `validation.report.json` reports `is_valid: true` before presenting.
+- `--requirement` keywords: `只要饼图/仅展示柱状` (force chart type), `浅色/纸张` (paper-light theme), `分页/多页签` (tabs layout), `地图` (prefer map).
