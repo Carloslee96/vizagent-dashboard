@@ -187,7 +187,10 @@ class TestCompileDashboard:
     def test_new_chart_types_compile(self, mini_data):
         """P4 新类型（area/nightingale/treemap/funnel）能经 skeleton else 分支编译。"""
         from vizagent_dashboard.schemas.dashboard_spec import (
-            ChartItem, ChartType, DashboardSpec, LayoutRow,
+            ChartItem,
+            ChartType,
+            DashboardSpec,
+            LayoutRow,
         )
         spec = DashboardSpec(
             title="新类型测试", theme="midnight-ops",
@@ -212,7 +215,10 @@ class TestCompileDashboard:
     def test_gauge_radar_compile(self, mini_data):
         """P4 gauge/radar 经 skeleton 编译且通过门禁。"""
         from vizagent_dashboard.schemas.dashboard_spec import (
-            ChartItem, ChartType, DashboardSpec, LayoutRow,
+            ChartItem,
+            ChartType,
+            DashboardSpec,
+            LayoutRow,
         )
         spec = DashboardSpec(
             title="gauge/radar 测试", theme="midnight-ops",
@@ -231,7 +237,10 @@ class TestCompileDashboard:
     def test_heatmap_compile(self, mini_data):
         """P4 heatmap 经 skeleton 编译（series_field 二维网格，跳过聚合）且通过门禁。"""
         from vizagent_dashboard.schemas.dashboard_spec import (
-            ChartItem, ChartType, DashboardSpec, LayoutRow,
+            ChartItem,
+            ChartType,
+            DashboardSpec,
+            LayoutRow,
         )
         spec = DashboardSpec(
             title="heatmap 测试", theme="midnight-ops",
