@@ -52,15 +52,24 @@ def api(method: str, endpoint: str, body: dict | None = None) -> dict:
 
 
 def local_files() -> list[str]:
-    """列出 skill/ 下应同步的文件相对路径（POSIX 风格）。"""
-    rels = []
-    for p in sorted(SKILL_DIR.rglob("*")):
-        if not p.is_file() or p.suffix == ".pyc":
-            continue
-        parts = p.relative_to(SKILL_DIR).parts
-        if any(part in SKIP_DIRS for part in parts):
-            continue
-        rels.append(p.relative_to(SKILL_DIR).as_posix())
+    """列出 skill/ 下 git 跟踪的文件相对路径（POSIX），与 subtree split 语义一致。
+
+    用 git ls-files 而非 rglob，避免把未跟踪的本地文件（examples 试验数据、
+    validation.report.json 等）误推到公开仓库。
+    """
+    r = subprocess.run(
+        ["git", "ls-files"],
+        cwd=SKILL_DIR, capture_output=True, check=False, text=True, encoding="utf-8",
+    )
+    if r.returncode != 0:
+        sys.stderr.write(f"git ls-files 失败: {r.stderr}\n")
+        sys.exit(1)
+    rels = [line.strip() for line in r.stdout.splitlines() if line.strip()]
+    # 保险：跳过构建产物（即便被误跟踪）
+    rels = [
+        rel for rel in rels
+        if not any(part in SKIP_DIRS for part in pathlib.PurePath(rel).parts)
+    ]
     return rels
 
 
