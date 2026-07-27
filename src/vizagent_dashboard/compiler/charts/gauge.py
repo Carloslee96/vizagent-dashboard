@@ -34,7 +34,7 @@ class GaugeBuilder:
             "radius": "90%",
             "center": ["50%", "55%"],
             "progress": {"show": True, "width": 14, "itemStyle": {"color": ctx.palette[0]}},
-            "axisLine": {"lineStyle": [{"width": 14, "color": [[1, ctx.colors["grid_color"]]]}]},
+            "axisLine": {"lineStyle": {"width": 14, "color": [[1, ctx.colors["grid_color"]]]}},
             "axisTick": {"show": False},
             "splitLine": {"show": False},
             "axisLabel": {"show": False},

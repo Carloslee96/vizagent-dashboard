@@ -520,9 +520,14 @@ def _render_html(
         if (!node.offsetParent || instances.has(node.id)) return;
         const entry = byId.get(node.id);
         if (!entry) return;
-        const chart = echarts.init(node);
-        chart.setOption(entry.option);
-        instances.set(node.id, chart);
+        try {
+          const chart = echarts.init(node);
+          chart.setOption(entry.option);
+          instances.set(node.id, chart);
+        } catch (err) {
+          node.innerHTML = '<div class="empty-state">图表渲染失败</div>';
+          console.error('vizagent chart init failed:', node.id, err);
+        }
       });
     }
     function activate(button, selector, targetAttribute) {
