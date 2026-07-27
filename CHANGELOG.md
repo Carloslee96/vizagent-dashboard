@@ -1,6 +1,12 @@
 # vizagent-dashboard 更新日志
 
-## [Unreleased] - 2026-07-27
+## [0.1.1] - 2026-07-27
+
+### PyPI 上线
+
+- **release.yml 开启 PyPI 发布**：取消 PyPI step 注释，启用 Trusted Publisher（OIDC 免 token）。依赖 maintainer 在 pypi.org 预登记 pending publisher（project=vizagent-dashboard, owner=Carloslee96, repo=vizagent-dashboard, workflow=release.yml）。
+- **版本号 0.1.0 → 0.1.1**：pyproject / SBOM 同步；PyPI 不允许覆盖版本号，故 v0.1.0 仅 GitHub，PyPI 从 v0.1.1 起。
+- **Release Notes v0.1.1**：新建 `docs/RELEASE_NOTES_v0.1.1.md`，release.yml `body_path` 指向它。
 
 ### 一键发布自动化
 
