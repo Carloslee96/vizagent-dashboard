@@ -2,11 +2,13 @@
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-07-27
+
 ### 文档：安装指引补 Skill 注册步骤
 
 - 修复新用户预期断裂：`pip install` 后 `/vizagent-dashboard` 在 Claude Code 找不到。README（中/英）「1. 安装」段从一步改为两步——`pip install vizagent-dashboard` + `vizagent skill install --target all`，并注明两步分别装 CLI 与注册 Skill 规则文件、装完需重启工具。
 - 「作为 AI 编程工具的 Skill 使用」段落与顶部特性 bullet 统一以 `--target all`（一次装齐 Claude + Cursor + Codex）为推荐命令。
-- 纯文档变更，无代码改动。
+- 纯文档变更，无代码改动；PyPI 首页 README 同步为两步安装。
 
 ## [0.1.6] - 2026-07-27
 
