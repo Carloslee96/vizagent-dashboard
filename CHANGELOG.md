@@ -1,5 +1,13 @@
 # vizagent-dashboard 更新日志
 
+## [Unreleased]
+
+### 飞书 Wiki 自动发布
+
+- **发布脚本**：新增 `tools/feishu_publish.py`——把 Markdown 自动发布到飞书知识库（建 wiki docx 节点 → 解析 md 为飞书 blocks → 逐个写入），仅依赖 Python 标准库。MD 路径与标题走命令行参数，可移植。
+- **运维指南**：新增 `docs/FEISHU_PUBLISH.md`——凭证、5 个 scope、知识库成员授权、block 字段映射表（标题 heading{level}、分隔线 divider:{}）、6 条踩坑记录、安全须知，供 maintainer 与接手 AI 无缝衔接。
+- **个人版飞书适配**：drive 上传被禁（1061004），改走 wiki 节点 + docx blocks 写入；图片不内嵌改文字链接；表格转代码块；引用降级斜体文本。
+
 ## [0.1.1] - 2026-07-27
 
 ### README 重写（未发布版本，仅 main）
