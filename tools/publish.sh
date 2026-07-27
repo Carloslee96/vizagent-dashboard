@@ -13,9 +13,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-VERSION="v0.1.0"
 REMOTE_URL="https://github.com/Carloslee96/vizagent-dashboard.git"
 SPLIT_BRANCH="dashboard-release-split"
+
+# 版本号 SSOT：从 skill/pyproject.toml 读取，避免多处硬编码
+VERSION="v$(grep -m1 '^version' skill/pyproject.toml | sed -E 's/.*"(.*)".*/\1/')"
 
 # 定位 monorepo 根目录
 ROOT="$(git rev-parse --show-toplevel)"
@@ -55,18 +57,19 @@ git branch -D "$SPLIT_BRANCH" 2>/dev/null || true
 cat <<EOF
 
 ═══════════════════════════════════════════════════════════════
-✅ 发布已触发！
+✅ 发布已触发！($VERSION)
 
 接下来全自动发生（无需你操作）：
   1. GitHub Actions 的 release.yml 被触发（由 tag 推送）
   2. 它构建 wheel + sdist
-  3. 用 docs/RELEASE_NOTES_v0.1.0.md 作为正文创建 GitHub Release，并附 wheel
+  3. 用 docs/RELEASE_NOTES_${VERSION#v}.md 作为正文创建 GitHub Release，并附 wheel
+  4. 通过 Trusted Publisher 自动发布到 PyPI（OIDC 免 token）
 
 查看进度：
   https://github.com/Carloslee96/vizagent-dashboard/actions
 查看 Release：
   https://github.com/Carloslee96/vizagent-dashboard/releases
-
-注：PyPI 发布在 v0.1.0 暂停（需先在 pypi.org 做一次性 Trusted Publisher 登记）。
+查看 PyPI：
+  https://pypi.org/project/vizagent-dashboard/
 ═══════════════════════════════════════════════════════════════
 EOF

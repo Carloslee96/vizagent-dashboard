@@ -12,13 +12,17 @@
 
 前置条件见 docs/FEISHU_PUBLISH.md（凭证、权限、知识库成员）。
 """
-import json, os, re, sys, urllib.request, urllib.error
+import contextlib
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.request
 
 # GBK 控制台兼容：避免打印中文符号崩溃
-try:
+with contextlib.suppress(Exception):
     sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
 
 APP_ID = os.environ["FEISHU_APP_ID"]
 APP_SECRET = os.environ.get("FEISHU_SECRET") or os.environ["FEISHU_APP_SECRET"]
@@ -188,7 +192,8 @@ def parse_md(md):
     return blocks
 
 
-md = open(MD_PATH, encoding="utf-8").read()
+with open(MD_PATH, encoding="utf-8") as f:
+    md = f.read()
 blocks = parse_md(md)
 print(f"[3] 解析 md 完成，共 {len(blocks)} 个 block")
 
@@ -206,4 +211,4 @@ for idx, blk in enumerate(blocks):
     written += 1
 print(f"[4] 写入完成 {written}/{total} 成功，{len(failed)} 个跳过 -> https://feishu.cn/docx/{doc_id}")
 if failed:
-    print("    失败类型汇总:", sorted(set(f[1] for f in failed)))
+    print("    失败类型汇总:", sorted({f[1] for f in failed}))

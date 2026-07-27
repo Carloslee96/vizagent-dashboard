@@ -1,5 +1,18 @@
 # vizagent-dashboard 更新日志
 
+## [0.1.2] - 2026-07-27
+
+### Claude Code Skill 开箱即用（治本）
+
+修复 v0.1.1 的发布缺陷：pip 安装后无法在 Claude Code 里用 `/vizagent-dashboard` 触发——SKILL.md 既没进 pip 包，也没文档说明安装路径。
+
+- **canonical SKILL.md**：新增 `.claude/skills/vizagent-dashboard/SKILL.md`（`user-invocable: true`，含工作流 + DashboardSpec 参考 + 排错表）。clone 仓库并用 Claude Code 打开即自动注册为项目级 Skill。
+- **`vizagent skill install` 子命令**：pip 用户一行命令把 SKILL.md 装到 `~/.claude/skills/vizagent-dashboard/`，重启 Claude Code 即可斜杠触发；`vizagent skill path` 查看打包位置。定位逻辑双路回退（wheel 包内数据 → 仓库相对路径）。
+- **wheel 打包 SKILL.md**：pyproject 加 hatch `force-include`，把 SKILL.md 映射进 `vizagent_dashboard/skill_assets/SKILL.md`，pip 装完即含。
+- **README 安装说明**：中英两版补「作为 Claude Code Skill 使用」章节（pip 路径 + clone 路径 + Codex 路径）。
+- **契约测试**：新增 `test_skill_path_command` / `test_skill_install_command`，验证定位与安装（monkeypatch 重定向 home，不污染真实用户目录）。干净 venv 装 wheel 实测通过。
+- **lint 清债**：`tools/feishu_publish.py` 5 处 ruff 错误清零（import 排序、contextlib.suppress、with open、set comprehension）。
+
 ## [Unreleased]
 
 ### 飞书 Wiki 自动发布

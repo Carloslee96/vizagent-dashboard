@@ -181,7 +181,7 @@ vizagent build --data <data-file> [options]
 
 ## 🤖 Agent Skill mode (let AI analyze for you)
 
-The deterministic planner is keyword-level — it knows "date → line" but not the business meaning behind your data. For smarter analysis, load this project as a **Claude Code / Codex skill** (at `skills/build-data-dashboard/`) and let your own AI:
+The deterministic planner is keyword-level — it knows "date → line" but not the business meaning behind your data. For smarter analysis, load this project as a **Claude Code / Codex skill** and let your own AI:
 
 1. Read the data inventory (`vizagent inventory`)
 2. Understand your business and author a DashboardSpec
@@ -194,6 +194,22 @@ vizagent inventory --data <file> --output data.inventory.json
 vizagent compile  --data <file> --spec <spec.json> --output dashboard/
 vizagent validate --data <file> --spec <spec.json> --html dashboard/output.html
 ```
+
+### Use as a Claude Code Skill
+
+After pip install, one command installs the skill definition to your user-level directory. Restart Claude Code and trigger it with the `/vizagent-dashboard` slash command:
+
+```bash
+pip install vizagent-dashboard
+vizagent skill install          # installs to ~/.claude/skills/vizagent-dashboard/
+# restart Claude Code, type /vizagent-dashboard or just say "build a dashboard from xx.xlsx"
+```
+
+To only print the bundled skill path: `vizagent skill path`.
+
+> Cloning this repo and opening it in Claude Code auto-registers it as a project-level skill (repo-root `.claude/skills/vizagent-dashboard/`), no manual install needed.
+>
+> Codex users use `skills/build-data-dashboard/` (ships `agents/openai.yaml`).
 
 ---
 

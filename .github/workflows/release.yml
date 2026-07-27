@@ -21,7 +21,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          body_path: docs/RELEASE_NOTES_v0.1.1.md
+          body_path: docs/RELEASE_NOTES_v0.1.2.md
       # ── PyPI 发布（Trusted Publisher，OIDC 免 token）────────────
       # 依赖 maintainer 在 pypi.org 预登记 pending publisher：
       #   project=vizagent-dashboard, owner=Carloslee96,

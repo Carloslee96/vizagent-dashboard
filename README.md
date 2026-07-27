@@ -181,7 +181,7 @@ vizagent build --data <数据文件> [选项]
 
 ## 🤖 Agent Skill 模式（让 AI 帮你分析）
 
-确定性规划器是关键词级别的，懂「日期→折线」但不懂数据背后的业务含义。要更智能的分析，把本项目加载为 **Claude Code / Codex 的 Skill**（位于 `skills/build-data-dashboard/`），让你自己的 AI 来：
+确定性规划器是关键词级别的，懂「日期→折线」但不懂数据背后的业务含义。要更智能的分析，把本项目加载为 **Claude Code / Codex 的 Skill**，让你自己的 AI 来：
 
 1. 读取数据盘点（`vizagent inventory`）
 2. 理解你的业务、编写 DashboardSpec
@@ -194,6 +194,22 @@ vizagent inventory --data <文件> --output data.inventory.json
 vizagent compile  --data <文件> --spec <spec.json> --output dashboard/
 vizagent validate --data <文件> --spec <spec.json> --html dashboard/output.html
 ```
+
+### 作为 Claude Code Skill 使用
+
+pip 安装后，一行命令把 Skill 定义装到用户级目录，重启 Claude Code 即可用 `/vizagent-dashboard` 斜杠命令触发：
+
+```bash
+pip install vizagent-dashboard
+vizagent skill install          # 装到 ~/.claude/skills/vizagent-dashboard/
+# 重启 Claude Code，输入 /vizagent-dashboard 或直接说「用 xx.xlsx 做个大屏」
+```
+
+也可以只看 Skill 定义位置：`vizagent skill path`。
+
+> clone 本仓库并用 Claude Code 打开，会自动注册为项目级 Skill（仓库根 `.claude/skills/vizagent-dashboard/`），无需手动安装。
+>
+> Codex 用户使用 `skills/build-data-dashboard/`（带 `agents/openai.yaml`）。
 
 ---
 

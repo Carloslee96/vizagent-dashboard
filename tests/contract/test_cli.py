@@ -130,3 +130,26 @@ def test_build_offline_embedded(runner, tmp_path):
 
     assert re.search(r'<script[^>]+src=["\']https?://', html) is None
     assert "jsdelivr.net" not in html
+
+
+def test_skill_path_command(runner):
+    """vizagent skill path 能定位打包的 SKILL.md。"""
+    result = runner.invoke(cli, ["skill", "path"])
+    assert result.exit_code == 0, result.output
+    p = Path(result.output.strip())
+    assert p.exists()
+    content = p.read_text(encoding="utf-8")
+    assert "name: vizagent-dashboard" in content
+    assert "user-invocable: true" in content
+
+
+def test_skill_install_command(runner, tmp_path, monkeypatch):
+    """vizagent skill install 把 SKILL.md 拷到 ~/.claude/skills/，不污染真实 home。"""
+    monkeypatch.setattr("vizagent_dashboard.cli.Path.home", lambda: tmp_path)
+    result = runner.invoke(cli, ["skill", "install"])
+    assert result.exit_code == 0, result.output
+    dest = tmp_path / ".claude" / "skills" / "vizagent-dashboard" / "SKILL.md"
+    assert dest.exists()
+    content = dest.read_text(encoding="utf-8")
+    assert "name: vizagent-dashboard" in content
+    assert "user-invocable: true" in content

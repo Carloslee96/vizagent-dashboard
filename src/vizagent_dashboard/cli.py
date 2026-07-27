@@ -178,6 +178,45 @@ def build_command(
         click.launch(str(html_path.resolve()))
 
 
+@cli.command("skill")
+@click.argument("action", type=click.Choice(["install", "path"]))
+def skill_command(action: str) -> None:
+    """安装或查看 Claude Code Skill 定义。
+
+    install：把打包的 SKILL.md 拷到 ~/.claude/skills/vizagent-dashboard/，重启 Claude Code 后可用 /vizagent-dashboard 触发。
+    path：打印打包的 SKILL.md 路径。
+    """
+
+    src = _find_skill_md()
+    if src is None:
+        raise click.ClickException("未找到打包的 SKILL.md，请升级 vizagent-dashboard")
+    if action == "path":
+        click.echo(str(src))
+        return
+    dest = Path.home() / ".claude" / "skills" / "vizagent-dashboard" / "SKILL.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    click.echo(f"Skill 已安装: {dest}")
+    click.echo("重启 Claude Code 后即可用 /vizagent-dashboard 触发。")
+
+
+def _find_skill_md() -> Path | None:
+    """定位打包的 SKILL.md：优先包内数据（wheel），回退仓库相对路径（editable/clone）。"""
+    import contextlib
+
+    with contextlib.suppress(ImportError, AttributeError, FileNotFoundError, TypeError):
+        from importlib.resources import files
+
+        pkg = Path(str(files("vizagent_dashboard") / "skill_assets" / "SKILL.md"))
+        if pkg.exists():
+            return pkg
+    for base in Path(__file__).resolve().parents:
+        cand = base / ".claude" / "skills" / "vizagent-dashboard" / "SKILL.md"
+        if cand.exists():
+            return cand
+    return None
+
+
 def _execute_build(
     data: Path,
     spec: DashboardSpec,

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizagent-dashboard"
-version = "0.1.1"
+version = "0.1.2"
 description = "Compile CSV/XLSX data and DashboardSpec into validated offline HTML dashboards."
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -51,6 +51,8 @@ vizagent = "vizagent_dashboard.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vizagent_dashboard"]
+# 把仓库根的 Claude Code Skill 定义打进 wheel，供 `vizagent skill install` 读取
+force-include = {".claude/skills/vizagent-dashboard/SKILL.md" = "vizagent_dashboard/skill_assets/SKILL.md"}
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -60,6 +62,7 @@ include = [
     "/LICENSE",
     "/NOTICE",
     "/pyproject.toml",
+    "/.claude/skills/vizagent-dashboard/SKILL.md",
 ]
 
 [tool.pytest.ini_options]
