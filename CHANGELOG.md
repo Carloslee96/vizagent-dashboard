@@ -27,6 +27,13 @@
 
 ## [Unreleased]
 
+### 新图表类型 batch B（P4：gauge/radar）
+
+- **gauge**：仪表盘单值进度（灰底 + 彩色 progress 填充 + 中心 detail 大数字）；百分比类（≤100）按 0-100 量程，否则量程=max(100,value)。`data_hints=("single_metric",)`。
+- **radar**：雷达图，每 y_field 一维度（max 取数据最大值），每 x 类别一条数据，半透明 areaStyle；需 ≥2 个 y 字段否则返回 base。`data_hints=("multivariate",)`。
+- planner `_explicit_chart_type` 加关键词：仪表盘/进度→gauge、雷达→radar（+ 南丁格尔/树图/漏斗/面积 补齐），`--requirement` 可达。
+- 测试：gauge（求和+量程）、gauge 百分比、radar 多维度、radar 单字段降级 + skeleton 端到端；8 case 字节级不变；124 passed。
+
 ### 新图表类型 batch A（P4：area/nightingale/treemap/funnel）
 
 - **area**：补 `ChartType.area` 枚举值（builder 已存在），Spec 可达。

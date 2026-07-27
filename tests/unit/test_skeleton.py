@@ -209,6 +209,25 @@ class TestCompileDashboard:
         assert '"type":"treemap"' in html
         assert '"type":"funnel"' in html
 
+    def test_gauge_radar_compile(self, mini_data):
+        """P4 gauge/radar 经 skeleton 编译且通过门禁。"""
+        from vizagent_dashboard.schemas.dashboard_spec import (
+            ChartItem, ChartType, DashboardSpec, LayoutRow,
+        )
+        spec = DashboardSpec(
+            title="gauge/radar 测试", theme="midnight-ops",
+            layout=[LayoutRow(columns=2, items=[
+                ChartItem(chart_type=ChartType.gauge, title="总销售额", x_field="类别", y_field="销售额"),
+                ChartItem(chart_type=ChartType.radar, title="多维", x_field="类别", y_field=["销售额", "利润", "数量"]),
+            ])],
+        )
+        html = compile_dashboard(spec=spec, excel_data=mini_data)
+        report = validate_html(html)
+        assert report["is_valid"] is True
+        assert '"type":"gauge"' in html
+        assert '"type":"radar"' in html
+        assert '"indicator"' in html
+
     def test_embedded_mode_offline(self, mini_data, mini_spec):
         """embedded 模式无 CDN 链接、无外部脚本。"""
         html = compile_dashboard(spec=mini_spec, excel_data=mini_data, deployment_mode="embedded")

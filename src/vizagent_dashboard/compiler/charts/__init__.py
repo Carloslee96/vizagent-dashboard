@@ -14,9 +14,11 @@ from typing import Any, Protocol
 from vizagent_dashboard.compiler.charts._common import ChartContext, _chart_colors_from_vars
 from vizagent_dashboard.compiler.charts.bar import BarBuilder
 from vizagent_dashboard.compiler.charts.funnel import FunnelBuilder
+from vizagent_dashboard.compiler.charts.gauge import GaugeBuilder
 from vizagent_dashboard.compiler.charts.line import LineBuilder
 from vizagent_dashboard.compiler.charts.nightingale import NightingaleBuilder
 from vizagent_dashboard.compiler.charts.pie import PieBuilder
+from vizagent_dashboard.compiler.charts.radar import RadarBuilder
 from vizagent_dashboard.compiler.charts.scatter import ScatterBuilder
 from vizagent_dashboard.compiler.charts.treemap import TreemapBuilder
 
@@ -48,6 +50,8 @@ CHART_BUILDERS: dict[str, ChartBuilder] = {
     "nightingale": NightingaleBuilder(),
     "treemap": TreemapBuilder(),
     "funnel": FunnelBuilder(),
+    "gauge": GaugeBuilder(),
+    "radar": RadarBuilder(),
     "scatter": ScatterBuilder(),
 }
 

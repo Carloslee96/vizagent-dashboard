@@ -219,6 +219,50 @@ class TestBuildChartOption:
             )
             assert "title" in json.loads(option_json)
 
+    def test_gauge_chart(self, mini_data, chart_palette, css_vars):
+        """仪表盘：单值进度。"""
+        option_json = build_chart_option(
+            chart_type="gauge", title="完成率", data=mini_data,
+            x_field="月份", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["type"] == "gauge"
+        assert opt["series"][0]["data"][0]["value"] == 4500  # 1000+2000+1500
+        assert opt["series"][0]["max"] == 4500  # value>100 → max=value
+
+    def test_gauge_percentage_max_100(self, chart_palette, css_vars):
+        """百分比类（≤100）量程 0-100。"""
+        data = [{"项": "A", "率": "75"}]
+        option_json = build_chart_option(
+            chart_type="gauge", title="转化率", data=data,
+            x_field="项", y_field="率", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["max"] == 100
+        assert opt["series"][0]["data"][0]["value"] == 75
+
+    def test_radar_chart(self, mini_data, chart_palette, css_vars):
+        """雷达图：多指标多维度。"""
+        option_json = build_chart_option(
+            chart_type="radar", title="多维对比", data=mini_data,
+            x_field="类别", y_field=["销售额", "利润", "数量"],
+            chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["type"] == "radar"
+        assert len(opt["radar"]["indicator"]) == 3  # 3 个维度
+        # build_chart_option 直调不聚合，mini_data 3 行 → 3 条雷达数据
+        assert len(opt["series"][0]["data"]) == 3
+
+    def test_radar_single_field_returns_base(self, mini_data, chart_palette, css_vars):
+        """雷达图需 ≥2 个 y 字段，否则返回 base。"""
+        option_json = build_chart_option(
+            chart_type="radar", title="单维度", data=mini_data,
+            x_field="类别", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert "series" not in opt or opt.get("series", []) == []
+
 
 class TestBuildChartOptionWithRealData:
     """用真实电商数据（72 行）测试。"""

@@ -184,8 +184,14 @@ def _explicit_chart_type(requirement: str) -> ChartType | None:
         return None
     patterns = (
         (("饼图", "环图", "占比"), ChartType.pie),
+        (("南丁格尔", "玫瑰图"), ChartType.nightingale),
+        (("矩形树图", "树图"), ChartType.treemap),
+        (("漏斗", "转化"), ChartType.funnel),
+        (("仪表盘", "进度"), ChartType.gauge),
+        (("雷达",), ChartType.radar),
         (("散点",), ChartType.scatter),
         (("折线", "趋势"), ChartType.line),
+        (("面积",), ChartType.area),
         (("柱状", "条形", "排行"), ChartType.bar),
         (("表格", "明细"), ChartType.table),
     )
