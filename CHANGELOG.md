@@ -27,6 +27,13 @@
 
 ## [Unreleased]
 
+### 新图表类型 batch C（P4：heatmap）
+
+- **heatmap**：热力图，x_field × series_field 二维网格，值为 y_field 聚合（同坐标求和）；visualMap 分色段（grid_color→palette[0]）。`data_hints=("matrix",)`，需 series_field 否则返回 base。
+- **series_field 透传**：`build_chart_option` 新增可选 `series_field` 参数 + `ChartContext.series_field`；skeleton 传 `item.series_field`，`_prepare_chart_rows` 跳过 heatmap（保留二维原行，不按 x 聚合）。向后兼容（默认 None，现有调用输出不变）。
+- planner 加「热力」关键词→heatmap。
+- 测试：heatmap 网格/visualMap/无 series 降级 + skeleton 端到端；8 case 字节级不变；127 passed。
+
 ### 新图表类型 batch B（P4：gauge/radar）
 
 - **gauge**：仪表盘单值进度（灰底 + 彩色 progress 填充 + 中心 detail 大数字）；百分比类（≤100）按 0-100 量程，否则量程=max(100,value)。`data_hints=("single_metric",)`。

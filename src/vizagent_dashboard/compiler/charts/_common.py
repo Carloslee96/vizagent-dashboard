@@ -22,6 +22,7 @@ class ChartContext:
     colors: dict[str, str]
     base: dict[str, Any]
     categories: list[str]
+    series_field: str = ""
 
 
 def _clean_number(value: Any) -> int | float | None:

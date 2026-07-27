@@ -22,6 +22,7 @@ class ChartType(str, Enum):
     funnel = "funnel"
     gauge = "gauge"
     radar = "radar"
+    heatmap = "heatmap"
     scatter = "scatter"
     map_china = "map_china"
     map_world = "map_world"

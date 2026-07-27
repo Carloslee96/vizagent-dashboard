@@ -15,6 +15,7 @@ from vizagent_dashboard.compiler.charts._common import ChartContext, _chart_colo
 from vizagent_dashboard.compiler.charts.bar import BarBuilder
 from vizagent_dashboard.compiler.charts.funnel import FunnelBuilder
 from vizagent_dashboard.compiler.charts.gauge import GaugeBuilder
+from vizagent_dashboard.compiler.charts.heatmap import HeatmapBuilder
 from vizagent_dashboard.compiler.charts.line import LineBuilder
 from vizagent_dashboard.compiler.charts.nightingale import NightingaleBuilder
 from vizagent_dashboard.compiler.charts.pie import PieBuilder
@@ -52,6 +53,7 @@ CHART_BUILDERS: dict[str, ChartBuilder] = {
     "funnel": FunnelBuilder(),
     "gauge": GaugeBuilder(),
     "radar": RadarBuilder(),
+    "heatmap": HeatmapBuilder(),
     "scatter": ScatterBuilder(),
 }
 
@@ -72,10 +74,11 @@ def build_chart_option(
     y_field: str | list[str],
     chart_palette: list[str] | None = None,
     css_vars: dict[str, str] | None = None,
+    series_field: str | None = None,
 ) -> str:
     """根据图表类型和数据生成 ECharts option JSON（确定性，零 LLM 调用）。
 
-    未知类型回退到柱状图（保留历史契约）。
+    未知类型回退到柱状图（保留历史契约）。series_field 供热力图等二维图表使用。
     """
     if not data:
         logger.warning(f"build_chart_option: empty data for chart '{title}'")
@@ -110,7 +113,7 @@ def build_chart_option(
         # 未知类型回退到柱状图（与历史行为一致）
         return build_chart_option(
             chart_type="bar", title=title, data=data, x_field=x_field, y_field=y_fields,
-            chart_palette=chart_palette, css_vars=css_vars,
+            chart_palette=chart_palette, css_vars=css_vars, series_field=series_field,
         )
 
     ctx = ChartContext(
@@ -123,5 +126,6 @@ def build_chart_option(
         colors=colors,
         base=base,
         categories=categories,
+        series_field=series_field or "",
     )
     return builder.build(ctx)

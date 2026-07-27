@@ -263,6 +263,38 @@ class TestBuildChartOption:
         opt = json.loads(option_json)
         assert "series" not in opt or opt.get("series", []) == []
 
+    def test_heatmap_chart(self, chart_palette, css_vars):
+        """热力图：x×series 二维网格，值为 metric 聚合。"""
+        data = [
+            {"月份": "1月", "地区": "华东", "销售额": "100"},
+            {"月份": "1月", "地区": "华南", "销售额": "200"},
+            {"月份": "2月", "地区": "华东", "销售额": "150"},
+            {"月份": "2月", "地区": "华南", "销售额": "250"},
+        ]
+        option_json = build_chart_option(
+            chart_type="heatmap", title="月度×地区", data=data,
+            x_field="月份", y_field="销售额", series_field="地区",
+            chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["type"] == "heatmap"
+        assert opt["xAxis"]["data"] == ["1月", "2月"]
+        assert opt["yAxis"]["data"] == ["华东", "华南"]
+        # 4 个网格点
+        assert len(opt["series"][0]["data"]) == 4
+        # visualMap min/max 正确
+        assert opt["visualMap"]["min"] == 100
+        assert opt["visualMap"]["max"] == 250
+
+    def test_heatmap_without_series_returns_base(self, mini_data, chart_palette, css_vars):
+        """热力图无 series_field 时返回 base（需二维）。"""
+        option_json = build_chart_option(
+            chart_type="heatmap", title="无二维", data=mini_data,
+            x_field="类别", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert "series" not in opt or opt.get("series", []) == []
+
 
 class TestBuildChartOptionWithRealData:
     """用真实电商数据（72 行）测试。"""

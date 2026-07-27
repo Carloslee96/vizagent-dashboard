@@ -189,6 +189,7 @@ def _explicit_chart_type(requirement: str) -> ChartType | None:
         (("漏斗", "转化"), ChartType.funnel),
         (("仪表盘", "进度"), ChartType.gauge),
         (("雷达",), ChartType.radar),
+        (("热力",), ChartType.heatmap),
         (("散点",), ChartType.scatter),
         (("折线", "趋势"), ChartType.line),
         (("面积",), ChartType.area),

@@ -277,6 +277,7 @@ def compile_artifacts(
                         y_field=item.y_field,
                         chart_palette=palette,
                         css_vars=css_vars,
+                        series_field=item.series_field,
                     )
                 )
                 option.pop("title", None)
@@ -801,7 +802,7 @@ def _aggregate_kpi(rows: list[dict[str, Any]], field: str, aggregation: str | No
 
 
 def _prepare_chart_rows(item: ChartItem, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    if item.chart_type in {ChartType.scatter, ChartType.table}:
+    if item.chart_type in {ChartType.scatter, ChartType.table, ChartType.heatmap}:
         return rows
     y_fields = item.y_field if isinstance(item.y_field, list) else [item.y_field]
     y_fields = [field for field in y_fields if field]

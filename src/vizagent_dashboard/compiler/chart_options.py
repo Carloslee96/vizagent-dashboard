@@ -142,6 +142,7 @@ def build_chart_options_batch(charts: list[dict]) -> list[ChartOption]:
                 y_field=c.get("y_field", ""),
                 chart_palette=c.get("chart_palette"),
                 css_vars=c.get("css_vars"),
+                series_field=c.get("series_field"),
             )
         except Exception as e:  # noqa: BLE001 - 批量生成单图失败不应中断整批
             logger.warning(f"build_chart_options_batch failed for chart {chart_id}: {e}")
