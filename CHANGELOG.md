@@ -2,6 +2,13 @@
 
 ## [0.1.1] - 2026-07-27
 
+### README 重写（未发布版本，仅 main）
+
+- **全中文**：去除中英文混杂，所有描述改中文（命令/技术术语保留英文）。
+- **场景故事开头**：以「老板要大屏」场景代入，直观展示「给数据自动出大屏」。
+- **requirement 定位澄清**：明确 `--requirement` 可选、默认自动分析；新增「关于需求参数」专节，回答「给了数据为何不能自动分析」——默认就是自动分析（日期→折线、地理→地图、占比→饼图），已用 3 表数据实测验证。
+- **新演示图**：`docs/assets/demo.png` 为真实自动生成的大屏截图（非手写 spec）。
+
 ### PyPI 上线
 
 - **release.yml 开启 PyPI 发布**：取消 PyPI step 注释，启用 Trusted Publisher（OIDC 免 token）。依赖 maintainer 在 pypi.org 预登记 pending publisher（project=vizagent-dashboard, owner=Carloslee96, repo=vizagent-dashboard, workflow=release.yml）。

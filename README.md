@@ -2,70 +2,115 @@
 
 # ⭐ vizagent-dashboard
 
-**Turn business requirements into HTML dashboards — Use your own AI**
+**给数据，自动出大屏——一行命令，CSV/Excel 变成可离线打开的 HTML 数据大屏**
 
 [![CI](https://github.com/Carloslee96/vizagent-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Carloslee96/vizagent-dashboard/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Release](https://github.com/Carloslee96/vizagent-dashboard/actions/workflows/release.yml/badge.svg)](https://github.com/Carloslee96/vizagent-dashboard/releases)
 [![PyPI](https://img.shields.io/pypi/v/vizagent-dashboard)](https://pypi.org/project/vizagent-dashboard/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**You bring your data + your AI subscription. We compile them into a single HTML dashboard.**
-
 </div>
 
 <br>
+
+你有一份销售 Excel，老板说「下班前给我个大屏看下趋势」。
+
+```bash
+vizagent build --data 销售明细.xlsx
+```
+
+30 秒后，一个能直接双击打开的 HTML 大屏躺在 `output/` 里——折线趋势、品类构成、地区地图，全自动生成。不用装数据库，不用配 API Key，不用写代码。
 
 <div align="center">
-  <a href="examples/ecommerce/">
-    <img src="docs/assets/ecommerce-thumb.png"
-         alt="vizagent-dashboard demo — ecommerce dashboard in midnight-ops theme"
-         width="720">
-  </a>
+  <img src="docs/assets/demo.png" alt="vizagent-dashboard 自动生成的大屏" width="760">
   <br>
-  <sub><i>pip install → one command → interactive HTML dashboard. No database, no server, no hidden API bills.</i></sub>
+  <sub>上图由 <code>vizagent build --data 销售明细.xlsx</code> 自动分析生成，未写任何需求或代码。</sub>
 </div>
 
-<br>
+---
+
+## ✨ 它能做什么
+
+- **🧠 自动分析数据**：检测到日期字段出折线趋势、地理字段出地图、占比字段出饼图、分类字段出柱状图。给数据就行，不用写需求。
+- **📦 单文件 HTML**：一个自包含文件，ECharts 已内嵌。双击就能看，丢任意静态服务器或发给同事都行，断网也照常渲染。
+- **📊 丰富图表**：折线、柱状、饼图、散点、KPI 卡片、中国地图、世界地图。
+- **🎨 5 个主题**：`midnight-ops`（默认）、`paper-light`、`warm-editorial`、`clinical-light`、`signal-dark`，一键切换。
+- **📁 CSV / Excel 多表**：自动读多个 Sheet，逐表、逐行追踪数据覆盖。
+- **✅ 内置质量门禁**：自动查截断、空数据、零尺寸图表、地图未绑定、字段缺失；可选 Playwright 浏览器门禁。
+- **🔒 安全默认**：HTML 转义 + Content Security Policy + 路径穿越防护。
+- **🤖 可当 Agent Skill**：加载为 Claude Code / Codex 的 Skill，让你自己的 AI 来分析数据、编写更聪明的大屏方案。
+
+---
+
+## 💡 关于「需求」参数——它不是必填
+
+很多人第一反应：「我都给你数据表了，怎么不能自动分析？」
+
+**能。默认就是自动分析。** `--requirement` 是可选的微调，不是必填：
+
+```bash
+# ① 自动模式（推荐，最省事）：只给数据，自动分析字段、选图表、配主题
+vizagent build --data 销售明细.xlsx
+
+# ② 微调模式：加一句需求，影响图表选择/主题/分页（仍不调 LLM）
+vizagent build --data 销售明细.xlsx --requirement "只要饼图，浅色主题，分页展示"
+
+# ③ Spec 模式：完全手动控制，写一份 DashboardSpec JSON，零意外
+vizagent build --data 销售明细.xlsx --spec my-spec.json
+```
+
+`--requirement` 里写什么会影响结果：
+
+| 写了什么 | 会怎样 |
+|---|---|
+| `只要饼图` / `仅展示柱状` | 强制用指定图表类型 |
+| `浅色` / `明亮` / `纸张` | 切到 paper-light 主题 |
+| `分页` / `多页签` | 用 tabs 多页签布局 |
+| `地图` | 优先出地图 |
+| **不写** | 自动分析，按字段类型选最合适的图表 |
+
+> 想要更智能的分析（比如「对比去年同期」「找出异常点」）？用下面的 **Agent Skill 模式**，让你自己的 AI 来理解需求。
+
+---
+
+## 🚀 30 秒上手
+
+### 1. 安装
 
 ```bash
 pip install vizagent-dashboard
-vizagent build --data sales.xlsx --requirement "每月销售额趋势" --output dashboard/
-# ✓ Dashboard generated in 3.2s → dashboard/output.html
-# Open in browser — done.
 ```
 
----
+### 2. 准备数据
 
-## ✨ Features
+存成 CSV 或 Excel。多个 Sheet 也行：
 
-- **🧠 AI-Powered, Your AI** — In Agent Skill mode the host AI (Claude, Codex, …) authors the `DashboardSpec` using reasoning you already pay for — no extra API key, no hidden bills.
-- **🔧 Zero-API Spec Mode** — Prefer no AI at all? Write a structured `DashboardSpec` JSON and compile deterministically — zero LLM calls, zero API cost, works fully offline. The `--requirement` flag steers a built-in deterministic planner (still no LLM).
-- **📦 Single HTML Output** — One self-contained file. No server, no database, no build step. Drop it on any static host or open directly in a browser.
-- **📊 Rich Charts** — Line, bar, pie, scatter, map (China/world), KPI cards — powered by ECharts, inlined for offline use.
-- **🎨 5 Clean-Room Themes** — `midnight-ops`, `paper-light`, `warm-editorial`, `clinical-light`, `signal-dark`. No third-party brand names or assets. Switch with `--theme <name>`.
-- **📁 CSV & Excel** — Read from `.csv` or `.xlsx`, multiple sheets supported with per-sheet data-coverage tracking.
-- **✅ Built-in Validation** — Static + optional Playwright checks for truncation, external-script dependency, empty series, unbound maps, and row-level data coverage.
-- **🔒 Secure by Default** — Content Security Policy, HTML escaping, path traversal protection.
-- **🤖 Agent Skill Ready** — Loadable as a Claude Code / Codex skill under `skills/build-data-dashboard/`.
+```
+销售明细.xlsx
+├─ 销售趋势   （月份、销售额）        → 自动出折线
+├─ 品类构成   （品类、占比）          → 自动出饼图
+└─ 地区销售   （省份、销售额）        → 自动出中国地图
+```
 
----
+### 3. 一行命令出大屏
 
-## 🔑 API Key Model (Clear & Simple)
+```bash
+vizagent build --data 销售明细.xlsx
+```
 
-| Mode | Who pays for AI? | API Key needed? |
-|------|-----------------|-----------------|
-| **Agent Skill** (Claude/Codex) | **You** — already paying for your AI subscription | The skill uses your host AI's reasoning — no separate key to configure |
-| **CLI — Spec mode** (`--spec`) | **Nobody** — compiler is fully deterministic | ❌ No API key needed |
-| **CLI — Planner mode** (`--requirement`) | **Nobody** — a built-in deterministic planner steers the Spec from keywords | ❌ No API key needed |
+### 4. 打开 `output/output.html`
 
-> There is no `config` command and no `--planner` flag. The compiler and planner never call an LLM. All AI reasoning happens in your host agent (Agent Skill mode) — charged to your own subscription, never to this project.
+完事。
 
 ---
 
-## 🖼️ Gallery — one data file, five looks
+## 🖼️ 同一份数据，5 个主题
 
-同一份电商数据，5 个 clean-room 主题各编译一次。下图为其中 4 个主题的实际渲染首屏（截图来自 `examples/ecommerce/`）：
+```bash
+vizagent build --data 销售明细.xlsx --theme paper-light
+```
 
 <div align="center">
   <table>
@@ -104,172 +149,88 @@ vizagent build --data sales.xlsx --requirement "每月销售额趋势" --output 
   </table>
 </div>
 
-> 第五个主题 `clinical-light` 可用 `--theme clinical-light` 自行构建查看。
+> 第五个主题 `clinical-light` 用 `--theme clinical-light` 自行构建查看。
 
 ---
 
-## 🎨 5 Clean-Room Themes
-
-One data file, five looks — each a generic, brand-free token set. Pick a theme that matches your story:
-
-| Theme | Vibe | Best for |
-|-------|------|----------|
-| `midnight-ops` (default) | 深靛灰背景、蓝绿数据色 | 运营监控、技术演示 |
-| `paper-light` | 暖白纸张、墨色文字 | 经营汇报、长时间阅读 |
-| `warm-editorial` | 浅米色、暗红重点 | 内容分析、趋势故事 |
-| `clinical-light` | 冷白、蓝青强调 | 健康、设备、服务质量 |
-| `signal-dark` | 炭黑、琥珀青信号 | 告警、基础设施、高优先级状态 |
-
-Legacy IDs (`monitor-dark`, `paper-brief`, `paper-linen`, `minimal-doc`, `clean-slate`, `fitness-glass`, `command-post`, `amber-console`) resolve to the closest theme above.
-
-Switch with `--theme <name>`:
+## 📖 命令参数
 
 ```bash
-vizagent build --data sales.xlsx --theme paper-light --output dashboard/
+vizagent build --data <数据文件> [选项]
+```
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `--data` | 必填 | CSV 或 Excel 文件路径 |
+| `--requirement` | 空（自动分析） | 可选微调；写关键词影响图表/主题/分页，不调 LLM |
+| `--spec` | 无 | 指定 DashboardSpec JSON，进入完全手动模式 |
+| `--theme` | 自动或 `midnight-ops` | 主题 ID，见上表 |
+| `--page-mode` | `single_page` | `single_page` 或 `tabs` |
+| `--deployment` | `embedded` | `embedded`（离线）或 `cdn` |
+| `--output` | `./output` | 输出目录 |
+| `--browser` | 关 | 开启 Playwright 浏览器门禁 |
+| `--open` | 关 | 成功后自动打开 HTML |
+
+---
+
+## 🤖 Agent Skill 模式（让 AI 帮你分析）
+
+确定性规划器是关键词级别的，懂「日期→折线」但不懂数据背后的业务含义。要更智能的分析，把本项目加载为 **Claude Code / Codex 的 Skill**（位于 `skills/build-data-dashboard/`），让你自己的 AI 来：
+
+1. 读取数据盘点（`vizagent inventory`）
+2. 理解你的业务、编写 DashboardSpec
+3. 调用 `vizagent compile` 编译、`vizagent validate` 验证
+
+用的是你已有 AI 订阅的推理能力，**不需要额外 API Key**。
+
+```bash
+vizagent inventory --data <文件> --output data.inventory.json
+vizagent compile  --data <文件> --spec <spec.json> --output dashboard/
+vizagent validate --data <文件> --spec <spec.json> --html dashboard/output.html
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🏗️ 架构
 
-### 1. Install
-
-```bash
-pip install vizagent-dashboard
+```
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  CSV / XLSX  │───▶│   自动分析   │───▶│    编译器     │───▶ output.html
+│  （你的数据） │    │ （选图表）   │    │  （生成 HTML）│
+└──────────────┘    └──────────────┘    └──────────────┘
+                           │                    │
+            --requirement  │                    │
+            （可选微调）    ▼                    ▼
+                    ┌──────────────┐    ┌──────────────┐
+                    │   规划器      │    │   质量门禁    │
+                    │ （关键词级）  │    │  （截断/空数据）│
+                    └──────────────┘    └──────────────┘
 ```
 
-### 2. Prepare your data
-
-Save your data as CSV or Excel:
-
-```bash
-# sales.xlsx
-# ┌──────────┬──────────┬──────────┬──────────┐
-# │ 月份     │ 销售额   │ 类别     │ 地区     │
-# ├──────────┼──────────┼──────────┼──────────┤
-# │ 2026-01  │ 128000   │ 数码     │ 华东     │
-# │ 2026-02  │ 135000   │ 数码     │ 华东     │
-# │ ...      │ ...      │ ...      │ ...      │
-# └──────────┴──────────┴──────────┴──────────┘
-```
-
-### 3. Build your dashboard
-
-```bash
-vizagent build \
-  --data sales.xlsx \
-  --requirement "月度销售额趋势，按类别和地区拆分，包含关键指标" \
-  --output my-dashboard/
-```
-
-### 4. Open `my-dashboard/output.html` in your browser
+**核心设计**：编译器完全确定性，无 LLM、无网络、无 API 调用，输出可复现。`--requirement` 规划器是关键词级的，不是大模型。需要真正的业务理解时，用 Agent Skill 模式让宿主 AI 接管分析。
 
 ---
 
-## 📖 Usage
+## 🧪 开发
 
 ```bash
-# Spec mode: data file + structured spec → zero API cost
-vizagent build --data data.xlsx --spec spec.json --output dashboard/
-
-# Planner mode: data file + requirement keywords → deterministic Spec (still no LLM)
-vizagent build --data data.xlsx --requirement "按省份的销售额地图" --output dashboard/
-
-# Specify theme
-vizagent build --data data.xlsx --theme midnight-ops --output dashboard/
-
-# Full pipeline
-vizagent build \
-  --data data.xlsx \
-  --requirement "展示各品类季度趋势，顶部 KPI 卡片显示总额和增长" \
-  --theme paper-light \
-  --output dashboard/
-```
-
-### Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--data` | required | Path to CSV or Excel file |
-| `--requirement` | `""` | Business requirement; steers the deterministic planner (no LLM) |
-| `--spec` | — | Path to DashboardSpec JSON (zero-API mode) |
-| `--theme` | from Spec or `midnight-ops` | Theme override; see [Themes](#-5-clean-room-themes) |
-| `--page-mode` | `single_page` | `single_page` or `tabs` |
-| `--deployment` | `embedded` | `embedded` (offline) or `cdn` |
-| `--output` | `./output` | Output directory |
-| `--browser` | `false` | Run the Playwright validation gate |
-| `--open` | `false` | Open dashboard in browser after build |
-
----
-
-## 🏗️ Architecture
-
-```
-┌──────────────┐    ┌────────────┐    ┌──────────────┐
-│  CSV / XLSX  │───▶│  Inventory │───▶│   Compiler   │───▶ output.html
-│  (your data) │    │  (analyze) │    │  (generate)  │
-└──────────────┘    └────────────┘    └──────────────┘
-                          │                  │
-                          ▼                  ▼
-                   ┌──────────────┐   ┌──────────────┐
-                   │ Requirement  │   │  Validator   │
-                   │ (NLP → spec) │   │  (quality)   │
-                   └──────────────┘   └──────────────┘
-```
-
-**Key design**: The Compiler is fully deterministic — no LLM, no API call, no network. The Planner (requirement → Spec) is a deterministic keyword planner, not an LLM. In Agent Skill mode the host AI authors the `DashboardSpec` using its own reasoning. In spec mode, the entire pipeline works offline with zero API cost.
-
----
-
-## 🤖 Agent Skill Mode
-
-vizagent-dashboard ships as a loadable **Claude Code / Codex** skill at `skills/build-data-dashboard/` (with `SKILL.md` + `agents/openai.yaml`). The host AI reads the inventory, authors a `DashboardSpec`, then runs the `vizagent` CLI to compile and validate:
-
-```bash
-vizagent inventory --data <file> --output data.inventory.json
-vizagent compile  --data <file> --spec <spec.json> --output dashboard/
-vizagent validate --data <file> --spec <spec.json> --html dashboard/output.html
-```
-
-The skill uses **your host AI's own reasoning** — you're already paying for your AI subscription, no extra key to configure.
-
----
-
-## 🧪 Development
-
-```bash
-# Clone
 git clone https://github.com/Carloslee96/vizagent-dashboard.git
 cd vizagent-dashboard
-
-# Install in editable mode
 pip install -e ".[dev]"
-
-# Run tests
 python -m pytest tests/ -v
-
-# Lint
-pip install ruff
 ruff check src/ tests/
 ```
 
 ---
 
-## 📄 License
+## 📄 许可证
 
-Apache 2.0 © VizAgent Team. See [LICENSE](LICENSE).
-
----
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Carloslee96/vizagent-dashboard&type=Date)](https://star-history.com/#Carloslee96/vizagent-dashboard&Date)
+Apache 2.0 © VizAgent Team。详见 [LICENSE](LICENSE)。
 
 ---
 
 <div align="center">
-  <b>No database. No server. Just one HTML file.<br>
-  You bring your data and your AI subscription — we do the rest.</b>
+  <b>不用数据库。不用服务器。就一个 HTML 文件。<br>给数据，出大屏。</b>
   <br><br>
   <a href="https://github.com/Carloslee96/vizagent-dashboard/stargazers">
     <img src="https://img.shields.io/github/stars/Carloslee96/vizagent-dashboard?style=social" alt="stars">
