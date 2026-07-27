@@ -1,5 +1,22 @@
 # vizagent-dashboard 更新日志
 
+## [Unreleased]
+
+## [0.1.5] - 2026-07-27
+
+### 关键修复：图表不渲染 + 新图表类型自动可达
+
+E2E 测试发现 v0.1.4 含 gauge 的大屏整屏图表不渲染，并暴露 planner 选型与控制台编码问题，本轮一并修复。
+
+- **Bug#4 gauge 炸全屏（critical）**：`gauge.py` 的 `axisLine.lineStyle` 误写成列表 `[{...}]`，ECharts 5 要求对象 `{width,color}`，`setOption` 抛 `Cannot read properties of undefined (reading 'length')`。修复为对象。
+- **Bug#5 init 无容错（critical）**：`skeleton.py` 的 `initVisible` 循环无 per-chart try/catch，单图 setOption 抛异常会中断循环、连累后续所有图表不初始化。改为 per-chart try/catch，失败显示占位 + console.error，不连累其他图。
+- **Bug#1 新图表类型自动模式够不着**：`_explicit_chart_type` 原要求 requirement 含「只展示/仅展示」才生效，且全局强制单一类型。新增 `_requested_types`——雷达/漏斗/仪表盘/南丁格尔/树图/面积/热力 等关键词无需「只展示」即可触发；「尽可能多类型/丰富/各种图表」触发全类型分发。保留「只展示 X」全局强制语义（向后兼容）。
+- **Bug#2 planner 不校验字段兼容性**：硬塞 radar 给单数值 sheet 会报错。新增 `_compatible_types`：radar 需 ≥2 数值、heatmap 需 2 分类维度 + 1 数值、area 需时间字段、gauge 需 ≥1 数值，不兼容回退 bar/pie。选型用「最少使用优先」最大化类型多样性，特异性做 tiebreak（radar 优先于 nightingale）。
+- **Bug#3 Windows 控制台中文 GBK 乱码**：CLI 顶层 `sys.stdout/stderr.reconfigure(encoding="utf-8")`，所有命令中文路径/列名/警告不再乱码。
+- 主题推断补「暖色/暖色调/珊瑚/温暖」→ `coral-warm`。
+- 测试：`test_planner.py` 加 `TestPlannerNewChartTypes` 7 项（关键词可达 / 字段兼容回退 / 多类型分发）；140 测试全绿，ruff 全清。
+- E2E：销售明细 +「要用尽可能多类型的图表」自动产出 10 种图表类型（kpi/map_world/radar/gauge/pie/nightingale/area/treemap/funnel/line），Playwright 9/9 渲染 0 报错。
+
 ## [0.1.3] - 2026-07-27
 
 ### 多 AI 工具 Skill 安装 + 安装提示语
@@ -24,8 +41,6 @@
 - **README 安装说明**：中英两版补「作为 Claude Code Skill 使用」章节（pip 路径 + clone 路径 + Codex 路径）。
 - **契约测试**：新增 `test_skill_path_command` / `test_skill_install_command`，验证定位与安装（monkeypatch 重定向 home，不污染真实用户目录）。干净 venv 装 wheel 实测通过。
 - **lint 清债**：`tools/feishu_publish.py` 5 处 ruff 错误清零（import 排序、contextlib.suppress、with open、set comprehension）。
-
-## [Unreleased]
 
 ## [0.1.4] - 2026-07-27
 

@@ -64,12 +64,14 @@ vizagent build --data <文件路径>
 #### 方式 B：微调模式
 
 ```
-vizagent build --data <文件路径> --requirement "只展示饼图和柱状图，浅色主题"
+vizagent build --data <文件路径> --requirement "要用尽可能多类型的图表，暖色主题"
 ```
 
 `--requirement` 影响：
-- `只要饼图` / `仅展示柱状` → 强制图表类型
-- `浅色` / `明亮` / `纸张` → 切到 paper-light 主题
+- `尽可能多类型` / `丰富` / `各种图表` → 自动分发多种图表类型（按各 sheet 字段形态分配）
+- `用雷达图` / `漏斗图` / `仪表盘` / `南丁格尔` / `树图` / `面积` / `热力` → 点名具体类型（按字段兼容性分配，不兼容自动回退）
+- `只展示饼图` / `仅展示柱状` → 全局强制单一图表类型
+- `浅色` / `明亮` / `纸张` → paper-light 主题；`暖色` / `珊瑚` → coral-warm 主题
 - `分页` / `多页签` → tabs 多页签布局
 - `地图` → 优先出地图
 
@@ -88,6 +90,8 @@ vizagent validate --data <文件路径> --spec dashboard.spec.json --html dashbo
 
 ## 主题
 
+共 25 个主题。原创 5 个：
+
 | 主题 ID | 风格 | 适合 |
 |---------|------|------|
 | `midnight-ops`（默认） | 深靛灰背景、蓝绿数据色 | 运营监控、技术演示 |
@@ -95,6 +99,8 @@ vizagent validate --data <文件路径> --spec dashboard.spec.json --html dashbo
 | `warm-editorial` | 浅米色、暗红重点 | 内容分析、趋势故事 |
 | `clinical-light` | 冷白、蓝青强调 | 健康、设备、服务质量 |
 | `signal-dark` | 炭黑、琥珀青信号 | 告警、基础设施 |
+
+去品牌引入 20 个：`coral-warm` / `obsidian-glass` / `parchment-serif` / `trust-blue` / `canvas-dot` / `ops-slate` / `ring-pastel` / `nebula-glow` / `graphite-iris` / `broadsheet` / `fiber-paper` / `grid-azure` / `gilt-navy` / `ember-paper` / `amethyst-glass` / `grove-dark` / `haze-lilac` / `phosphor-green` / `amber-scan` / `mono-noir`（详见 `docs/RELEASE_NOTES_v0.1.4.md`）。也可用 `--theme-dir` 加载自定义主题。
 
 ## DashboardSpec 格式（Spec 模式用）
 
@@ -117,12 +123,13 @@ vizagent validate --data <文件路径> --spec dashboard.spec.json --html dashbo
 ```
 
 字段参考：
-- `chart_type`: `kpi` | `line` | `bar` | `pie` | `scatter` | `map_china` | `map_world` | `table`
+- `chart_type`: `kpi` | `line` | `area` | `bar` | `pie` | `nightingale` | `treemap` | `funnel` | `gauge` | `radar` | `heatmap` | `scatter` | `map_china` | `map_world` | `table`
 - `data_sheet`: 必须与 inventory 中的 sheet 名一致
 - `aggregation`（kpi）: `sum` | `avg` | `max` | `min` | `count` | `last`
 - `width` 1–4，`height` 1–3
 - `map_world` 用 `longitude_field` / `latitude_field` 做散点
-- `y_field` 接受字符串或列表（line/bar 多系列；scatter 两字段）
+- `y_field` 接受字符串或列表（line/bar 多系列；radar 传 ≥2 数值字段列表做维度；scatter 两字段）
+- `series_field`（heatmap）: 第二分类维度，与 x_field 构成二维网格
 
 ## 常用参数
 

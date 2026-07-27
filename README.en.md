@@ -71,8 +71,11 @@ What you put in `--requirement` steers the result:
 
 | You write | What happens |
 |---|---|
-| `pies only` / `bars only` | Force a specific chart type |
+| `as many types as possible` / `variety` | Distribute many chart types across sheets |
+| `radar` / `funnel` / `gauge` / `nightingale` / `treemap` / `area` / `heatmap` | Name a specific type (falls back if fields incompatible) |
+| `pies only` / `bars only` | Force a single chart type globally |
 | `light` / `bright` / `paper` | Switch to paper-light theme |
+| `warm` / `coral` | Switch to coral-warm theme |
 | `tabs` / `paginated` | Use tabbed layout |
 | `map` | Prefer maps |
 | **nothing** | Auto-analyze, pick the most fitting chart per field type |

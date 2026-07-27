@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizagent-dashboard"
-version = "0.1.4"
+version = "0.1.5"
 description = "Compile CSV/XLSX data and DashboardSpec into validated offline HTML dashboards."
 readme = "README.md"
 license = {file = "LICENSE"}
