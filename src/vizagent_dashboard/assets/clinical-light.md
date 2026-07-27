@@ -1,3 +1,11 @@
+---
+id: clinical-light
+name: Clinical Light
+aliases: [clean-slate, fitness-glass]
+decoration: flat
+base: light
+---
+
 # Clinical Light
 
 ## Visual Theme

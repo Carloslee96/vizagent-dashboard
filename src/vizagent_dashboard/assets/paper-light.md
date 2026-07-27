@@ -1,3 +1,11 @@
+---
+id: paper-light
+name: Paper Light
+aliases: [paper-brief, paper-linen, minimal-doc]
+decoration: flat
+base: light
+---
+
 # Paper Light
 
 ## Visual Theme

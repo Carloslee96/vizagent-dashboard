@@ -1,3 +1,11 @@
+---
+id: midnight-ops
+name: Midnight Ops
+aliases: [monitor-dark, dark-ops]
+decoration: flat
+base: dark
+---
+
 # Midnight Ops
 
 ## Visual Theme

@@ -1,3 +1,11 @@
+---
+id: warm-editorial
+name: Warm Editorial
+aliases: []
+decoration: flat
+base: light
+---
+
 # Warm Editorial
 
 ## Visual Theme

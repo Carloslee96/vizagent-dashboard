@@ -27,6 +27,15 @@
 
 ## [Unreleased]
 
+### 主题 + 图表类型扩展骨架（P0 + P2-core）
+
+立「丢文件/加模块即可增减」的扩展骨架，核心编译逻辑零改动。详见 `docs/EXTENSIBILITY.md`。
+
+- **P0 主题注册表**：5 个主题 `.md` 加 frontmatter（`id`/`name`/`aliases`/`decoration`/`base`，别名自声明，SSOT）；`compiler/themes.py` 退役硬编码 `THEME_IDS`/`ALIASES`，改自动扫描 `assets/*.md`；`load_theme` 返回去 frontmatter 的正文。加主题 = 丢一个 .md 文件。`THEME_IDS` 保留为派生常量（向后兼容）。
+- **P2 图表注册表核心**：新建 `compiler/charts/` 包——`ChartBuilder` Protocol + `ChartContext` + `CHART_BUILDERS` 显式注册表 + `build_chart_option` 分发器；line/area/bar/pie/scatter 各一个 builder，代码从 `chart_options.py` 逐行搬迁。`chart_options.py` 降为向后兼容 facade（skeleton / 测试导入路径不变）。加 ECharts 图表类型 = 加 enum 值 + builder 文件 + 注册一行，skeleton 编译循环自动路由。
+- **回归保证**：5 主题 `parse_design_tokens` 输出与改前字节级一致；`build_chart_option` 8 个 case（line/bar/pie/scatter/area/空数据/未知类型回退/自定义 palette）输出与改前字节级一致；101 测试全绿。
+- **不动**：`skeleton.py` 编译循环、`ChartType` 枚举、planner、schema（kpi/table/map 不产 ECharts option，强塞统一接口属过度抽象；枚举退役波及面大收益低，均按设计稿后续阶段处理）。
+
 ### 飞书 Wiki 自动发布
 
 - **发布脚本**：新增 `tools/feishu_publish.py`——把 Markdown 自动发布到飞书知识库（建 wiki docx 节点 → 解析 md 为飞书 blocks → 逐个写入），仅依赖 Python 标准库。MD 路径与标题走命令行参数，可移植。

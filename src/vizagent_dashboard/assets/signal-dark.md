@@ -1,3 +1,11 @@
+---
+id: signal-dark
+name: Signal Dark
+aliases: [command-post, amber-console]
+decoration: flat
+base: dark
+---
+
 # Signal Dark
 
 ## Visual Theme
