@@ -266,3 +266,13 @@ class TestDebrandedThemes:
     def test_resolves_by_id(self):
         for theme_id in DEBRANDED_THEMES:
             assert resolve_theme_id(theme_id) == theme_id
+
+
+def test_version_matches_package_metadata():
+    """__version__ 必须与安装包元数据一致（SSOT：版本号只在 pyproject.toml）。"""
+    from importlib.metadata import version
+
+    from vizagent_dashboard import __version__
+
+    assert __version__ == version("vizagent-dashboard")
+    assert __version__ != "0.0.0"  # 已安装，不应命中兜底

@@ -1,4 +1,4 @@
-# Software Bill of Materials (SBOM) — vizagent-dashboard v0.1.5
+# Software Bill of Materials (SBOM) — vizagent-dashboard v0.1.6
 
 > 生成日期：2026-07-27（手工维护，v0.2 起 CI 自动生成）
 
@@ -7,7 +7,7 @@
 | 字段 | 值 |
 |---|---|
 | 名称 | vizagent-dashboard |
-| 版本 | 0.1.5 |
+| 版本 | 0.1.6 |
 | 许可证 | Apache-2.0 |
 | 主页 | https://github.com/Carloslee96/vizagent-dashboard |
 

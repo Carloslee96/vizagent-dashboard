@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-07-27
+
+### 修复：版本号 SSOT
+
+- **Bug#6 `vizagent --version` 报错版本**：`__init__.py` 的 `__version__` 硬编码 `"0.1.0"` 从未同步，导致 CLI 永远报 0.1.0（`pip show` 才准）。改为 `importlib.metadata.version("vizagent-dashboard")` 读包元数据，版本号单一事实来源在 `pyproject.toml`，bump 即自动同步。源码未安装时兜底 `"0.0.0"`。
+- 测试：新增 `test_version_matches_package_metadata` 防退化；141 测试全绿。
+
 ## [0.1.5] - 2026-07-27
 
 ### 关键修复：图表不渲染 + 新图表类型自动可达
