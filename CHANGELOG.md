@@ -5,6 +5,8 @@
 ### PyPI 上线
 
 - **release.yml 开启 PyPI 发布**：取消 PyPI step 注释，启用 Trusted Publisher（OIDC 免 token）。依赖 maintainer 在 pypi.org 预登记 pending publisher（project=vizagent-dashboard, owner=Carloslee96, repo=vizagent-dashboard, workflow=release.yml）。
+- **登记指南文档**：新建 `docs/PyPI_SETUP.md`（登记步骤、版本规则、发布路径、本机环境运维要点、排错速查），供 maintainer 与接手 AI 无缝衔接。
+- **API 发布工具**：新建 `tools/publish_via_api.py`——github.com 不通时通过 Git Data API 在服务端构造提交+tag，绕开 git push；可传版本号复用。
 - **版本号 0.1.0 → 0.1.1**：pyproject / SBOM 同步；PyPI 不允许覆盖版本号，故 v0.1.0 仅 GitHub，PyPI 从 v0.1.1 起。
 - **Release Notes v0.1.1**：新建 `docs/RELEASE_NOTES_v0.1.1.md`，release.yml `body_path` 指向它。
 
