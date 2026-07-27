@@ -35,7 +35,9 @@ echo "  ✓ 拆分完成 → $SPLIT_HEAD"
 
 echo "▶ [3/5] 推送到公开仓库 main 分支"
 echo "  （若弹出浏览器要求登录 GitHub，请完成授权；这是唯一需要你操作的一步）"
-git push --force-with-lease "$REMOTE_URL" "$SPLIT_BRANCH:main"
+# 用 --force：subtree split 每次重算提交哈希，main 是单分支全量覆盖，
+# 且公开仓库只有本项目的提交，不存在覆盖他人工作的风险。
+git push --force "$REMOTE_URL" "$SPLIT_BRANCH:main"
 echo "  ✓ 推送完成"
 
 echo "▶ [4/5] 打 tag $VERSION 并推送（触发自动 Release）"
