@@ -46,7 +46,7 @@ vizagent build --data 销售明细.xlsx
 - **📁 CSV / Excel 多表**：自动读多个 Sheet，逐表、逐行追踪数据覆盖。
 - **✅ 内置质量门禁**：自动查截断、空数据、零尺寸图表、地图未绑定、字段缺失；可选 Playwright 浏览器门禁。
 - **🔒 安全默认**：HTML 转义 + Content Security Policy + 路径穿越防护。
-- **🤖 可当 Agent Skill**：加载为 Claude Code / Codex 的 Skill，让你自己的 AI 来分析数据、编写更聪明的大屏方案。
+- **🤖 可当 Agent Skill**：加载为 Claude Code / Cursor / Codex 的 Skill（`vizagent skill install`），让你自己的 AI 来分析数据、编写更聪明的大屏方案。
 
 ---
 
@@ -195,21 +195,30 @@ vizagent compile  --data <文件> --spec <spec.json> --output dashboard/
 vizagent validate --data <文件> --spec <spec.json> --html dashboard/output.html
 ```
 
-### 作为 Claude Code Skill 使用
+### 作为 AI 编程工具的 Skill 使用
 
-pip 安装后，一行命令把 Skill 定义装到用户级目录，重启 Claude Code 即可用 `/vizagent-dashboard` 斜杠命令触发：
+pip 安装后，一行命令把规则文件装到用户级目录，重启对应工具即可触发。支持 Claude Code、Cursor、Codex CLI：
 
 ```bash
 pip install vizagent-dashboard
-vizagent skill install          # 装到 ~/.claude/skills/vizagent-dashboard/
-# 重启 Claude Code，输入 /vizagent-dashboard 或直接说「用 xx.xlsx 做个大屏」
+vizagent skill install                # 默认装 Claude Code
+vizagent skill install --target all   # 一次装齐 Claude + Cursor + Codex
+# 也可单独：--target cursor / --target codex
 ```
 
-也可以只看 Skill 定义位置：`vizagent skill path`。
+各工具触发方式：
 
-> clone 本仓库并用 Claude Code 打开，会自动注册为项目级 Skill（仓库根 `.claude/skills/vizagent-dashboard/`），无需手动安装。
+| 工具 | 安装位置 | 触发方式 |
+|---|---|---|
+| Claude Code | `~/.claude/skills/vizagent-dashboard/` | `/vizagent-dashboard`，或说「用 xx.xlsx 做个大屏」 |
+| Cursor | `~/.cursor/rules/vizagent-dashboard.mdc` | 编辑 .xlsx/.csv 时自动注入，或对话中 @ 引用 |
+| Codex CLI | `~/.codex/prompts/vizagent-dashboard.md` | `/vizagent-dashboard` |
+
+查看打包的规则文件位置：`vizagent skill path [--target all]`。
+
+> clone 本仓库并用对应工具打开，会自动加载项目级规则（仓库根 `.claude/skills/`、`.cursor/rules/`、`.codex/prompts/`），无需手动安装。
 >
-> Codex 用户使用 `skills/build-data-dashboard/`（带 `agents/openai.yaml`）。
+> Codex 旧版 `skills/build-data-dashboard/`（带 `agents/openai.yaml`）仍保留，供其他 Agent 框架使用。
 
 ---
 
