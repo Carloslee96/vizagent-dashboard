@@ -14,8 +14,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class ChartType(str, Enum):
     line = "line"
+    area = "area"
     bar = "bar"
     pie = "pie"
+    nightingale = "nightingale"
+    treemap = "treemap"
+    funnel = "funnel"
     scatter = "scatter"
     map_china = "map_china"
     map_world = "map_world"

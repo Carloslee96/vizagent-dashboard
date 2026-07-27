@@ -176,6 +176,49 @@ class TestBuildChartOption:
         opt = json.loads(option_json)
         assert opt["color"] == custom_palette
 
+    def test_nightingale_chart(self, mini_data, chart_palette, css_vars):
+        """南丁格尔玫瑰图：pie + roseType=area。"""
+        option_json = build_chart_option(
+            chart_type="nightingale", title="品类玫瑰", data=mini_data,
+            x_field="类别", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["type"] == "pie"
+        assert opt["series"][0]["roseType"] == "area"
+        assert opt["series"][0]["radius"] == ["18%", "70%"]
+        assert len(opt["series"][0]["data"]) >= 2
+
+    def test_treemap_chart(self, mini_data, chart_palette, css_vars):
+        """矩形树图：type=treemap。"""
+        option_json = build_chart_option(
+            chart_type="treemap", title="品类占比", data=mini_data,
+            x_field="类别", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["type"] == "treemap"
+        assert len(opt["series"][0]["data"]) >= 2
+        assert opt["series"][0]["breadcrumb"] == {"show": False}
+
+    def test_funnel_chart(self, mini_data, chart_palette, css_vars):
+        """漏斗图：type=funnel。"""
+        option_json = build_chart_option(
+            chart_type="funnel", title="转化漏斗", data=mini_data,
+            x_field="类别", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+        )
+        opt = json.loads(option_json)
+        assert opt["series"][0]["type"] == "funnel"
+        assert opt["series"][0]["sort"] == "descending"
+        assert len(opt["series"][0]["data"]) >= 2
+
+    def test_new_types_empty_data_safe(self, chart_palette, css_vars):
+        """新类型空数据不崩溃，返回 base。"""
+        for ct in ["nightingale", "treemap", "funnel"]:
+            option_json = build_chart_option(
+                chart_type=ct, title=f"空{ct}", data=[],
+                x_field="类别", y_field="销售额", chart_palette=chart_palette, css_vars=css_vars,
+            )
+            assert "title" in json.loads(option_json)
+
 
 class TestBuildChartOptionWithRealData:
     """用真实电商数据（72 行）测试。"""

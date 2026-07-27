@@ -184,6 +184,31 @@ class TestCompileDashboard:
         containers = re.findall(r'class="chart-container"', html)
         assert len(containers) == 4
 
+    def test_new_chart_types_compile(self, mini_data):
+        """P4 新类型（area/nightingale/treemap/funnel）能经 skeleton else 分支编译。"""
+        from vizagent_dashboard.schemas.dashboard_spec import (
+            ChartItem, ChartType, DashboardSpec, LayoutRow,
+        )
+        spec = DashboardSpec(
+            title="新类型测试", theme="midnight-ops",
+            layout=[LayoutRow(columns=2, items=[
+                ChartItem(chart_type=ChartType.area, title="面积", x_field="月份", y_field="销售额"),
+                ChartItem(chart_type=ChartType.nightingale, title="玫瑰", x_field="类别", y_field="销售额"),
+                ChartItem(chart_type=ChartType.treemap, title="树图", x_field="类别", y_field="销售额"),
+                ChartItem(chart_type=ChartType.funnel, title="漏斗", x_field="类别", y_field="销售额"),
+            ])],
+        )
+        html = compile_dashboard(spec=spec, excel_data=mini_data)
+        report = validate_html(html)
+        assert report["is_valid"] is True
+        # 四个 chart-container 面板
+        assert len(re.findall(r'class="chart-container"', html)) == 4
+        # option JSON 含对应 series type（nightingale 是 pie+roseType）
+        assert '"type":"line"' in html and "areaStyle" in html
+        assert '"roseType":"area"' in html
+        assert '"type":"treemap"' in html
+        assert '"type":"funnel"' in html
+
     def test_embedded_mode_offline(self, mini_data, mini_spec):
         """embedded 模式无 CDN 链接、无外部脚本。"""
         html = compile_dashboard(spec=mini_spec, excel_data=mini_data, deployment_mode="embedded")

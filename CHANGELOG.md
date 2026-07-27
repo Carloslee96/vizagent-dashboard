@@ -27,6 +27,15 @@
 
 ## [Unreleased]
 
+### 新图表类型 batch A（P4：area/nightingale/treemap/funnel）
+
+- **area**：补 `ChartType.area` 枚举值（builder 已存在），Spec 可达。
+- **nightingale**：南丁格尔玫瑰图（pie + `roseType="area"`，radius `["18%","70%"]`）。
+- **treemap**：矩形树图（面积反映数值），从 SaaS port。
+- **funnel**：漏斗图（转化/阶段，descending）。
+- 三者 `data_hints=("composition",)`，注册在 pie 之后（pie 仍是 composition 默认）。
+- skeleton else 分支自动路由，无需改编译循环。测试：4 个 build_chart_option 用例 + 1 个 skeleton 端到端；现有 8 case 字节级不变；119 passed。
+
 ### Planner 用 data_hints 选型（P3）
 
 - **builder 自声明 data_hints**：`ChartBuilder` Protocol 加 `data_hints` 类属性；line/area=`time_series`、bar=`comparison`、pie=`composition`、scatter=`correlation`。新增 `select_chart_type_by_hint(hint)` 按注册顺序取第一个匹配者（约定：同 hint 的默认类型先注册，故 time_series→line、composition→pie）。
