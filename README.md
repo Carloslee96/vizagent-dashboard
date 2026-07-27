@@ -26,8 +26,12 @@ vizagent build --data 销售明细.xlsx
 <div align="center">
   <img src="docs/assets/demo.png" alt="vizagent-dashboard 自动生成的大屏" width="760">
   <br>
-  <sub>上图由 <code>vizagent build --data 销售明细.xlsx</code> 自动分析生成，未写任何需求或代码。</sub>
+  <sub>上图由 <code>vizagent build --data 销售明细.xlsx</code> 自动分析生成，未写任何需求或代码。<br>
+  4 个 KPI + 世界地图站点分布 + 8 张图表，全部来自 10 个 Sheet 的自动识别。</sub>
 </div>
+
+> 没有数据？仓库自带这份示例，克隆后直接跑：<br>
+> `vizagent build --data examples/销售明细.xlsx`
 
 ---
 
