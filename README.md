@@ -118,7 +118,7 @@ vizagent build --data 销售明细.xlsx
 
 ---
 
-## 🖼️ 同一份数据，5 个主题
+## 🖼️ 同一份数据，25 个主题任选
 
 ```bash
 vizagent build --data 销售明细.xlsx --theme paper-light
@@ -161,7 +161,7 @@ vizagent build --data 销售明细.xlsx --theme paper-light
   </table>
 </div>
 
-> 第五个主题 `clinical-light` 用 `--theme clinical-light` 自行构建查看。
+> 下方展示 5 个原创主题预览。另 20 个去品牌主题（如 `coral-warm`、`grove-dark`、`phosphor-green` 等）见 `docs/THEME_AUDIT.md`，用 `--theme <id>` 切换；第五个原创主题 `clinical-light` 用 `--theme clinical-light` 自行构建查看。还支持 `--theme-dir` 加载自定义主题。
 
 ---
 

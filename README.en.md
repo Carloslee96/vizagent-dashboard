@@ -118,7 +118,7 @@ Done.
 
 ---
 
-## 🖼️ One dataset, five themes
+## 🖼️ One dataset, 25 themes to choose from
 
 ```bash
 vizagent build --data sales.xlsx --theme paper-light
@@ -161,7 +161,7 @@ vizagent build --data sales.xlsx --theme paper-light
   </table>
 </div>
 
-> The fifth theme, `clinical-light`: build it yourself with `--theme clinical-light`.
+> Previews below show the 5 original themes. The other 20 de-branded themes (e.g. `coral-warm`, `grove-dark`, `phosphor-green`) are listed in `docs/THEME_AUDIT.md` — switch with `--theme <id>`. The fifth original theme, `clinical-light`: build it yourself with `--theme clinical-light`. Custom themes are supported via `--theme-dir`.
 
 ---
 
