@@ -14,7 +14,7 @@ skill 当前只暴露 5 个 clean-room 主题和 8 种图表类型，但：
 ## 现状与痛点（探查结论）
 
 ### 主题链路
-- 5 个主题是 `src/vizagent_dashboard/assets/*.md`（token 表格 + Chart Palette）。
+- 25 个主题是 `src/vizagent_dashboard/assets/*.md`（token 表格 + Chart Palette）：5 原创 + 20 P1 去品牌引入（详见 `docs/THEME_AUDIT.md`）。
 - `compiler/themes.py`：`THEME_IDS` 硬编码 tuple + `ALIASES` dict + `resolve_theme_id()` + `list_themes()`。
 - `compiler/skeleton.py:parse_design_tokens()` 解析 md 表格 → css_vars + palette；`build_css_block()` 生成 CSS。
 - `compiler/chart_options.py:_chart_colors_from_vars()` 把主题色注入 ECharts。

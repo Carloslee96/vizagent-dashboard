@@ -42,7 +42,7 @@ vizagent build --data 销售明细.xlsx
 - **🧠 自动分析数据**：检测到日期字段出折线趋势、地理字段出地图、占比字段出饼图、分类字段出柱状图。给数据就行，不用写需求。
 - **📦 单文件 HTML**：一个自包含文件，ECharts 已内嵌。双击就能看，丢任意静态服务器或发给同事都行，断网也照常渲染。
 - **📊 丰富图表**：折线、柱状、饼图、散点、KPI 卡片、中国地图、世界地图。
-- **🎨 5 个主题**：`midnight-ops`（默认）、`paper-light`、`warm-editorial`、`clinical-light`、`signal-dark`，一键切换。
+- **🎨 25 个主题**：5 原创（`midnight-ops` 默认 / `paper-light` / `warm-editorial` / `clinical-light` / `signal-dark`）+ 20 去品牌引入（见 `docs/THEME_AUDIT.md`），一键切换；还支持 `--theme-dir` 自定义主题。
 - **📁 CSV / Excel 多表**：自动读多个 Sheet，逐表、逐行追踪数据覆盖。
 - **✅ 内置质量门禁**：自动查截断、空数据、零尺寸图表、地图未绑定、字段缺失；可选 Playwright 浏览器门禁。
 - **🔒 安全默认**：HTML 转义 + Content Security Policy + 路径穿越防护。

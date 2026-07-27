@@ -61,9 +61,10 @@ class TestLoadTheme:
 
 
 class TestListThemes:
-    def test_returns_five_themes(self):
+    def test_returns_25_themes(self):
+        """5 原创 + 20 P1 去品牌引入 = 25 个活动主题。"""
         themes = list_themes()
-        assert len(themes) == 5
+        assert len(themes) == 25
 
     def test_each_theme_has_required_fields(self):
         for t in list_themes():
@@ -196,3 +197,72 @@ class TestUserThemeDir:
         assert load_theme("midnight-ops").count("Override Ops") >= 1
         set_theme_dir(None)
         assert "Midnight Ops" in load_theme("midnight-ops")
+
+
+# P1 去品牌引入的 20 个主题：SaaS 源品牌名 → clean-room id。
+# 这些品牌名不得出现在任何 clean-room 主题正文中（去品牌校验）。
+DEBRANDED_THEMES = {
+    "coral-warm": "airbnb", "obsidian-glass": "apple", "parchment-serif": "claude",
+    "trust-blue": "coinbase", "canvas-dot": "figma", "ops-slate": "grafana",
+    "ring-pastel": "health-ring", "nebula-glow": "kraken", "graphite-iris": "linear",
+    "broadsheet": "newsroom", "fiber-paper": "notion", "grid-azure": "palantir",
+    "gilt-navy": "pitchbook", "ember-paper": "posthog", "amethyst-glass": "sentry",
+    "grove-dark": "spotify", "haze-lilac": "stripe", "phosphor-green": "supabase",
+    "amber-scan": "terminal-amber", "mono-noir": "vercel",
+}
+
+# 品牌残留关键词（品牌名 + 品牌专有色名 + 模仿性描述词），clean-room 主题不得命中。
+BRAND_RESIDUE_KEYWORDS = [
+    "airbnb", "apple", "anthropic", "claude", "coinbase", "figma", "grafana",
+    "kraken", "linear", "newsroom", "notion", "palantir", "pitchbook", "posthog",
+    "sentry", "spotify", "stripe", "supabase", "vercel",
+    "rausch", "babu", "arches", "crail", "circularsp", "cereal",
+    "标志性", "独占", "签名", "官方", "brand", "logo", "trademark", "专利",
+]
+
+
+class TestDebrandedThemes:
+    """P1：20 个 SaaS 品牌主题去品牌引入的校验。"""
+
+    def test_all_20_present_in_registry(self):
+        """20 个去品牌主题都已注册进 THEME_IDS。"""
+        ids = set(THEME_IDS)
+        for theme_id in DEBRANDED_THEMES:
+            assert theme_id in ids, f"{theme_id} 未注册"
+
+    def test_each_loads_and_parses(self):
+        """每个去品牌主题可加载，parse_design_tokens 产出非空 css_vars 与色板。"""
+        from vizagent_dashboard.compiler.skeleton import parse_design_tokens
+
+        for theme_id in DEBRANDED_THEMES:
+            body = load_theme(theme_id)
+            assert body, f"{theme_id} 加载为空"
+            tokens = parse_design_tokens(body)
+            assert len(tokens["css_vars"]) >= 9, f"{theme_id} css_vars 不足"
+            # amber-scan 源 4 色、mono-noir 源 6 色；其余 5 色
+            min_palette = 4 if theme_id == "amber-scan" else 5
+            assert len(tokens["chart_palette"]) >= min_palette, (
+                f"{theme_id} 色板不足：{tokens['chart_palette']}"
+            )
+
+    def test_no_brand_residue(self):
+        """任何 clean-room 主题正文不得残留品牌名/专有色名/签名词。"""
+        for theme_id in DEBRANDED_THEMES:
+            body = load_theme(theme_id).lower()
+            for kw in BRAND_RESIDUE_KEYWORDS:
+                assert kw not in body, f"{theme_id} 残留品牌关键词：{kw}"
+
+    def test_no_id_alias_collision_with_original_aliases(self):
+        """去品牌主题 id 不得与原创主题的别名碰撞（amber-scan 而非 amber-console）。"""
+        original_aliases = {
+            "monitor-dark", "dark-ops", "paper-brief", "paper-linen", "minimal-doc",
+            "clean-slate", "fitness-glass", "command-post", "amber-console",
+        }
+        for theme_id in DEBRANDED_THEMES:
+            assert theme_id not in original_aliases, (
+                f"{theme_id} 与原创主题别名碰撞"
+            )
+
+    def test_resolves_by_id(self):
+        for theme_id in DEBRANDED_THEMES:
+            assert resolve_theme_id(theme_id) == theme_id

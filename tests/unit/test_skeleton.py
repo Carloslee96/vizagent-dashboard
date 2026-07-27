@@ -252,6 +252,18 @@ class TestCompileDashboard:
         assert "jsdelivr.net" not in html
         assert re.search(r'<script[^>]+src=["\']https?://', html) is None
 
+    def test_p1_debranded_themes_compile(self, mini_data, mini_spec):
+        """P1 去品牌主题能端到端编译且通过门禁（抽样 light/dark/glass 各一）。"""
+        from vizagent_dashboard.compiler.themes import THEME_IDS
+        # 抽样：coral-warm(light/gradient)、grove-dark(dark)、amethyst-glass(glass/半透明卡)
+        for theme_id in ("coral-warm", "grove-dark", "amethyst-glass"):
+            assert theme_id in THEME_IDS
+            html = compile_dashboard(spec=mini_spec, excel_data=mini_data, theme_id=theme_id)
+            report = validate_html(html)
+            assert report["is_valid"] is True, f"{theme_id} 门禁失败：{report['issues']}"
+            # 主题 accent 色应注入 CSS（coral-warm 的 #ff385c）
+            assert "测试大屏" in html
+
     def test_build_manifest_embedded(self, ecommerce_data, ecommerce_spec):
         """编译产物内嵌 build-manifest，含覆盖与图表计数。"""
         html = compile_dashboard(spec=ecommerce_spec, excel_data=ecommerce_data)

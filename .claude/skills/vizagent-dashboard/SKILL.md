@@ -1,6 +1,6 @@
 ---
 name: vizagent-dashboard
-description: 给数据自动生成离线可打开的 HTML 数据大屏。输入 CSV/Excel 文件，自动分析字段、选图表、生成 ECharts 单文件大屏。支持折线、柱状、饼图、KPI、地图等多种图表和 5 个主题切换。
+description: 给数据自动生成离线可打开的 HTML 数据大屏。输入 CSV/Excel 文件，自动分析字段、选图表、生成 ECharts 单文件大屏。支持折线、柱状、饼图、KPI、地图等多种图表和 25 个主题切换。
 user-invocable: true
 argument-hint: "[build|compile|inventory|validate] [--data <file>] [--requirement <需求>]"
 allowed-tools:

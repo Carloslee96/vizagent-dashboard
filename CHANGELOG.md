@@ -27,6 +27,17 @@
 
 ## [Unreleased]
 
+### SaaS 品牌主题去品牌引入（P1）
+
+把 SaaS 主项目 20 个品牌导向主题**去品牌**引入开源 skill，主题数 5 → 25。
+
+- **去品牌变换**：每个 SaaS 主题只提取 12 个核心 token（`--bg-*` / `--text-*` / `--border-subtle` / `--accent-primary` / `--map-*` / `--radius-card` / `--font-family-*`）+ Chart 色板；**颜色/圆角 token 逐字节保真**（hex 与源同名 token 完全一致）；**字体栈 `-apple-system` → `system-ui`** 归一化去品牌；赋纯描述性中性名（如 spotify→`grove-dark`、airbnb→`coral-warm`、claude→`parchment-serif`）；Visual Theme prose 重写为中性美学描述，剔除全部品牌名 / 品牌专有色名（Rausch/Babu/Crail 等）/ 品牌签名指纹 / 品牌定位文案；SaaS 的 Fingerprint/Component/Motion/Anti-Pattern 等重 prose 一律不搬（lean 编译器不消费）。
+- **新主题 20 个**：`coral-warm` / `obsidian-glass` / `parchment-serif` / `trust-blue` / `canvas-dot` / `ops-slate` / `ring-pastel` / `nebula-glow` / `graphite-iris` / `broadsheet` / `fiber-paper` / `grid-azure` / `gilt-navy` / `ember-paper` / `amethyst-glass` / `grove-dark` / `haze-lilac` / `phosphor-green` / `amber-scan` / `mono-noir`（7 light + 13 dark）。
+- **保真度校验器** `tools/import_saas_themes.py`：逐对校验 clean-room 主题 token 与 SaaS 源同名 token 一致（颜色/圆角逐字节，字体归一化）+ 全文品牌残留扫描；`python tools/import_saas_themes.py` → 20/20 PASS，可复现验证供法律复核。
+- **审计文档** `docs/THEME_AUDIT.md` 扩写：记录 20 主题来源映射、去品牌变换规则、glass/glow 不渲染特效的限制（lean 编译器只灌 css_vars 不按 `--decoration` 分支）、`amethyst-glass` 半透明卡说明。
+- **命名避碰**：terminal-amber 命名为 `amber-scan` 而非 `amber-console`，避开与原创主题旧别名 `amber-console -> signal-dark` 的 id/别名同名碰撞。
+- 测试：`test_themes.py` 加 `TestDebrandedThemes`（注册/加载/解析/品牌残留/id-别名不碰撞/解析 5 项）+ `test_skeleton` 加 P1 主题端到端编译；主题数断言 5→25；127 测试全绿。
+
 ### 新图表类型 batch C（P4：heatmap）
 
 - **heatmap**：热力图，x_field × series_field 二维网格，值为 y_field 聚合（同坐标求和）；visualMap 分色段（grid_color→palette[0]）。`data_hints=("matrix",)`，需 series_field 否则返回 base。

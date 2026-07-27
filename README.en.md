@@ -42,7 +42,7 @@ vizagent build --data sales.xlsx
 - **🧠 Auto-analyzes your data**: detects date fields → trend lines, geo fields → maps, ratio fields → pies, categorical fields → bars. Just give it data — no requirement needed.
 - **📦 Single HTML file**: one self-contained file with ECharts inlined. Double-click to view, drop on any static host, or send to a colleague — renders even offline.
 - **📊 Rich charts**: line, bar, pie, scatter, KPI cards, China map, world map.
-- **🎨 5 themes**: `midnight-ops` (default), `paper-light`, `warm-editorial`, `clinical-light`, `signal-dark` — switch with one flag.
+- **🎨 25 themes**: 5 original (`midnight-ops` default / `paper-light` / `warm-editorial` / `clinical-light` / `signal-dark`) + 20 de-branded (see `docs/THEME_AUDIT.md`), switch with one flag; `--theme-dir` for custom themes.
 - **📁 CSV / Excel multi-sheet**: reads multiple sheets, tracks per-sheet and per-row data coverage.
 - **✅ Built-in quality gates**: auto-checks for truncation, empty data, zero-size charts, unbound maps, missing fields; optional Playwright browser gate.
 - **🔒 Secure by default**: HTML escaping + Content Security Policy + path traversal protection.
