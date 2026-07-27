@@ -46,7 +46,7 @@ vizagent build --data sales.xlsx
 - **📁 CSV / Excel multi-sheet**: reads multiple sheets, tracks per-sheet and per-row data coverage.
 - **✅ Built-in quality gates**: auto-checks for truncation, empty data, zero-size charts, unbound maps, missing fields; optional Playwright browser gate.
 - **🔒 Secure by default**: HTML escaping + Content Security Policy + path traversal protection.
-- **🤖 Works as an Agent Skill**: load it as a Claude Code / Cursor / Codex skill (`vizagent skill install`) and let your own AI analyze the data and author smarter dashboard specs.
+- **🤖 Works as an Agent Skill**: load it as a Claude Code / Cursor / Codex skill (`vizagent skill install --target all`) and let your own AI analyze the data and author smarter dashboard specs.
 
 ---
 
@@ -90,7 +90,10 @@ What you put in `--requirement` steers the result:
 
 ```bash
 pip install vizagent-dashboard
+vizagent skill install --target all   # register the Skill for Claude Code / Cursor / Codex
 ```
+
+> Both steps are required: the first installs the CLI (`vizagent build`), the second writes the Skill rule files to `~/.claude/skills/`, `~/.cursor/rules/`, `~/.codex/prompts/`. Restart the tool afterwards and `/vizagent-dashboard` is available. If you only want the CLI and no AI-tool integration, skip step 2.
 
 ### 2. Prepare your data
 
@@ -203,10 +206,8 @@ vizagent validate --data <file> --spec <spec.json> --html dashboard/output.html
 After pip install, one command installs the rule files to your user-level directory. Restart the tool and trigger it. Supports Claude Code, Cursor, and Codex CLI:
 
 ```bash
-pip install vizagent-dashboard
-vizagent skill install                # default: Claude Code
-vizagent skill install --target all   # install for Claude + Cursor + Codex at once
-# or single: --target cursor / --target codex
+vizagent skill install --target all   # install for Claude + Cursor + Codex at once (recommended)
+# or single: --target claude / --target cursor / --target codex
 ```
 
 Trigger per tool:

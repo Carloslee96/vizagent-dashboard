@@ -46,7 +46,7 @@ vizagent build --data 销售明细.xlsx
 - **📁 CSV / Excel 多表**：自动读多个 Sheet，逐表、逐行追踪数据覆盖。
 - **✅ 内置质量门禁**：自动查截断、空数据、零尺寸图表、地图未绑定、字段缺失；可选 Playwright 浏览器门禁。
 - **🔒 安全默认**：HTML 转义 + Content Security Policy + 路径穿越防护。
-- **🤖 可当 Agent Skill**：加载为 Claude Code / Cursor / Codex 的 Skill（`vizagent skill install`），让你自己的 AI 来分析数据、编写更聪明的大屏方案。
+- **🤖 可当 Agent Skill**：加载为 Claude Code / Cursor / Codex 的 Skill（`vizagent skill install --target all`），让你自己的 AI 来分析数据、编写更聪明的大屏方案。
 
 ---
 
@@ -90,7 +90,10 @@ vizagent build --data 销售明细.xlsx --spec my-spec.json
 
 ```bash
 pip install vizagent-dashboard
+vizagent skill install --target all   # 注册 Claude Code / Cursor / Codex 的 Skill
 ```
+
+> 两步缺一不可：第一步装 CLI（`vizagent build`），第二步把 Skill 规则文件写到 `~/.claude/skills/`、`~/.cursor/rules/`、`~/.codex/prompts/`。装完重启对应工具，`/vizagent-dashboard` 即可用。只想用命令行不接 AI 工具，可跳过第二步。
 
 ### 2. 准备数据
 
@@ -203,10 +206,8 @@ vizagent validate --data <文件> --spec <spec.json> --html dashboard/output.htm
 pip 安装后，一行命令把规则文件装到用户级目录，重启对应工具即可触发。支持 Claude Code、Cursor、Codex CLI：
 
 ```bash
-pip install vizagent-dashboard
-vizagent skill install                # 默认装 Claude Code
-vizagent skill install --target all   # 一次装齐 Claude + Cursor + Codex
-# 也可单独：--target cursor / --target codex
+vizagent skill install --target all   # 一次装齐 Claude + Cursor + Codex（推荐）
+# 也可单独：--target claude / --target cursor / --target codex
 ```
 
 各工具触发方式：
