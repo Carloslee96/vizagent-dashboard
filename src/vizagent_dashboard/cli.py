@@ -14,6 +14,7 @@ from typing import Any
 import click
 
 from vizagent_dashboard import __version__
+from vizagent_dashboard.compiler import themes
 from vizagent_dashboard.compiler.skeleton import compile_artifacts
 from vizagent_dashboard.inventory.reader import inventory_file
 from vizagent_dashboard.planner.heuristic import plan_dashboard
@@ -74,6 +75,7 @@ def plan_command(data: Path, requirement: str, theme: str | None, page_mode: str
 @click.option("--data", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("--spec", "spec_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("--theme", default=None, help="显式覆盖 Spec 主题")
+@click.option("--theme-dir", "theme_dir", default=None, type=click.Path(exists=True, file_okay=False, path_type=Path), help="项目级主题目录（同 id 覆盖包内主题）")
 @click.option("--deployment", type=click.Choice(["embedded", "cdn"]), default="embedded", show_default=True)
 @click.option("--output", "output_dir", type=click.Path(file_okay=False, path_type=Path), default=Path("output"))
 @click.option("--browser/--no-browser", default=False, help="使用 Playwright 执行浏览器门禁")
@@ -81,12 +83,14 @@ def compile_command(
     data: Path,
     spec_path: Path,
     theme: str | None,
+    theme_dir: Path | None,
     deployment: str,
     output_dir: Path,
     browser: bool,
 ) -> None:
     """使用现有 Spec 编译大屏。"""
 
+    themes.set_theme_dir(theme_dir)
     spec = _load_spec(spec_path)
     _execute_build(data, spec, theme, deployment, output_dir, browser)
 
@@ -136,6 +140,7 @@ def validate_command(
 @click.option("--requirement", default="", help="业务需求；不调用外部模型")
 @click.option("--spec", "spec_path", default=None, type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("--theme", default=None, help="显式覆盖 Spec 或自动主题")
+@click.option("--theme-dir", "theme_dir", default=None, type=click.Path(exists=True, file_okay=False, path_type=Path), help="项目级主题目录（同 id 覆盖包内主题）")
 @click.option("--page-mode", type=click.Choice(["single_page", "tabs"]), default=None)
 @click.option("--deployment", type=click.Choice(["embedded", "cdn"]), default="embedded", show_default=True)
 @click.option("--output", "output_dir", type=click.Path(file_okay=False, path_type=Path), default=Path("output"))
@@ -146,6 +151,7 @@ def build_command(
     requirement: str,
     spec_path: Path | None,
     theme: str | None,
+    theme_dir: Path | None,
     page_mode: str | None,
     deployment: str,
     output_dir: Path,
@@ -154,6 +160,7 @@ def build_command(
 ) -> None:
     """盘点、规划、编译并验证大屏。"""
 
+    themes.set_theme_dir(theme_dir)
     try:
         inventory, sheets = inventory_file(data)
         if spec_path:

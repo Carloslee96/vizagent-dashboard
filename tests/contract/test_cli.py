@@ -76,6 +76,32 @@ def test_compile_command(runner, tmp_path):
     assert manifest["coverage_complete"] is True
 
 
+def test_compile_theme_dir_loads_user_theme(runner, tmp_path):
+    """--theme-dir 加载项目级主题；--theme 指向其 id 时 manifest.theme 命中。"""
+    theme_dir = tmp_path / "mythemes"
+    theme_dir.mkdir()
+    (theme_dir / "project-brand.md").write_text(
+        "---\nid: project-brand\nname: Project Brand\naliases: []\n"
+        "decoration: flat\nbase: dark\n---\n\n# Project Brand\n\n## Visual Theme\n\n项目主题。\n\n"
+        "## Color Palette\n\n| Token | Value | Purpose |\n|---|---|---|\n"
+        "| `--bg-primary` | `#101112` | 背景 |\n| `--accent-primary` | `#abcdef` | 强调 |\n\n"
+        "## Chart Color Palette\n\n`#AABBCC` `#45C486` `#F2B84B`\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "build"
+    result = runner.invoke(
+        cli,
+        [
+            "compile", "--data", str(_DATA), "--spec", str(_SPEC),
+            "--theme", "project-brand", "--theme-dir", str(theme_dir),
+            "--output", str(output_dir),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    manifest = json.loads((output_dir / "build-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["theme"] == "project-brand"
+
+
 def test_build_command_full_pipeline(runner, tmp_path):
     output_dir = tmp_path / "build"
     result = runner.invoke(

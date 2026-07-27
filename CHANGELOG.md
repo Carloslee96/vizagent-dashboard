@@ -27,6 +27,12 @@
 
 ## [Unreleased]
 
+### 用户主题目录（P5）
+
+- **多源主题扫描**：`compiler/themes.py` 加载顺序为 包内 `assets/*.md` → 用户 `~/.vizagent/themes/*.md` → `--theme-dir <path>`，同 id 后者覆盖前者；`set_theme_dir()` 清缓存确保覆盖立即生效。
+- **`--theme-dir` CLI**：`build` / `compile` 命令新增 `--theme-dir` 选项，注入项目级主题目录。用户/团队丢一个 `.md` 到 `~/.vizagent/themes/` 或指定目录即可用自己品牌主题，不 fork、不碰源码。
+- **测试**：新增 `TestUserThemeDir`（发现/覆盖/恢复）+ `test_compile_theme_dir_loads_user_theme`（CLI 端到端）。105 测试全绿。
+
 ### 主题 + 图表类型扩展骨架（P0 + P2-core）
 
 立「丢文件/加模块即可增减」的扩展骨架，核心编译逻辑零改动。详见 `docs/EXTENSIBILITY.md`。

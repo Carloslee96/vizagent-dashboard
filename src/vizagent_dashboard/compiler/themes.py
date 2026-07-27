@@ -10,16 +10,41 @@ from __future__ import annotations
 
 import re
 from importlib.resources import files
+from pathlib import Path
 from typing import Any
 
 _cache: dict[str, str] = {}
 
+# 用户级主题目录（同 id 覆盖包内主题）；--theme-dir 注入的项目级目录优先级最高。
+_USER_THEME_DIR = Path.home() / ".vizagent" / "themes"
+_extra_theme_dir: Path | None = None
 
-def _iter_theme_files():
-    """枚举包内 assets/ 下的主题 .md 文件（Traversable）。"""
+
+def set_theme_dir(path: str | Path | None) -> None:
+    """注入项目级主题目录（CLI --theme-dir）；传 None 清除。
+
+    清空主题正文缓存，确保覆盖语义立即生效。
+    """
+    global _extra_theme_dir
+    _extra_theme_dir = Path(path) if path else None
+    _cache.clear()
+
+
+def _theme_sources() -> list[tuple[str, str]]:
+    """返回 [(name, content)]，按 包内 → 用户目录 → --theme-dir 顺序。
+
+    后者覆盖前者同 id 主题（取最后一条）。
+    """
+    sources: list[tuple[str, str]] = []
     for entry in files("vizagent_dashboard.assets").iterdir():
         if entry.name.endswith(".md"):
-            yield entry
+            sources.append((entry.name, entry.read_text(encoding="utf-8")))
+    for directory in (_USER_THEME_DIR, _extra_theme_dir):
+        if not directory or not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("*.md")):
+            sources.append((path.name, path.read_text(encoding="utf-8")))
+    return sources
 
 
 def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
@@ -54,13 +79,12 @@ def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
 
 
 def list_themes() -> list[dict[str, object]]:
-    """扫描 assets/*.md，返回所有主题的元信息（按 id 排序）。"""
-    themes: list[dict[str, object]] = []
-    for entry in _iter_theme_files():
-        content = entry.read_text(encoding="utf-8")
+    """扫描全部主题源，返回所有主题的元信息（同 id 取优先级最高者，按 id 排序）。"""
+    seen: dict[str, dict[str, object]] = {}
+    for name, content in _theme_sources():
         meta, body = _split_frontmatter(content)
-        theme_id = str(meta.get("id") or entry.name[:-3])
-        name = str(meta.get("name") or theme_id)
+        theme_id = str(meta.get("id") or name[:-3])
+        theme_name = str(meta.get("name") or theme_id)
         aliases = list(meta.get("aliases") or [])
         lines = body.splitlines()
         description = next(
@@ -69,24 +93,21 @@ def list_themes() -> list[dict[str, object]]:
                 for index, line in enumerate(lines)
                 if index > 2 and line.strip() and not line.startswith("#") and not line.startswith("|")
             ),
-            name,
+            theme_name,
         )
         colors: list[str] = []
         chart_section = body.partition("## Chart Color Palette")[2]
         for color in re.findall(r"#[0-9a-fA-F]{6}", chart_section):
             if color not in colors:
                 colors.append(color)
-        themes.append(
-            {
-                "id": theme_id,
-                "name": name,
-                "aliases": aliases,
-                "description": description,
-                "colors": colors[:5],
-            }
-        )
-    themes.sort(key=lambda item: str(item["id"]))
-    return themes
+        seen[theme_id] = {
+            "id": theme_id,
+            "name": theme_name,
+            "aliases": aliases,
+            "description": description,
+            "colors": colors[:5],
+        }
+    return sorted(seen.values(), key=lambda item: str(item["id"]))
 
 
 def resolve_theme_id(id_or_name: str | None) -> str:
@@ -110,12 +131,15 @@ def load_theme(theme_id: str) -> str:
     if not resolved:
         return ""
     if resolved not in _cache:
-        for entry in _iter_theme_files():
-            if entry.name == f"{resolved}.md":
-                content = entry.read_text(encoding="utf-8")
-                _, body = _split_frontmatter(content)
-                _cache[resolved] = body
-                break
+        content: str | None = None
+        for name, text in _theme_sources():
+            meta, _ = _split_frontmatter(text)
+            if str(meta.get("id") or name[:-3]) == resolved:
+                content = text  # 后者覆盖前者
+        if content is None:
+            return ""
+        _, body = _split_frontmatter(content)
+        _cache[resolved] = body
     return _cache.get(resolved, "")
 
 

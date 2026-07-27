@@ -10,12 +10,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from vizagent_dashboard.compiler.themes import (
     THEME_IDS,
     build_design_context,
     list_themes,
     load_theme,
     resolve_theme_id,
+    set_theme_dir,
     theme_display_name,
 )
 
@@ -135,3 +138,61 @@ class TestBuildDesignContext:
     def test_unknown_returns_default(self):
         ctx = build_design_context("nonexistent")
         assert "按以下通用设计 token" in ctx
+
+
+class TestUserThemeDir:
+    """P5：项目级主题目录（--theme-dir）覆盖包内主题。"""
+
+    @pytest.fixture
+    def theme_dir(self, tmp_path):
+        directory = tmp_path / "mythemes"
+        directory.mkdir()
+        yield directory
+        set_theme_dir(None)  # 清除全局状态，避免污染其他测试
+
+    def _write_theme(self, directory, theme_id, name, palette_hex):
+        (directory / f"{theme_id}.md").write_text(
+            "---\n"
+            f"id: {theme_id}\n"
+            f"name: {name}\n"
+            "aliases: []\n"
+            "decoration: flat\n"
+            "base: dark\n"
+            "---\n\n"
+            f"# {name}\n\n## Visual Theme\n\n测试主题。\n\n## Color Palette\n\n"
+            "| Token | Value | Purpose |\n|---|---|---|\n"
+            "| `--bg-primary` | `#101112` | 背景 |\n"
+            "| `--accent-primary` | `#abcdef` | 强调 |\n\n"
+            "## Chart Color Palette\n\n"
+            f"`{palette_hex}` `#45C486` `#F2B84B`\n",
+            encoding="utf-8",
+        )
+
+    def test_extra_theme_discovered(self, theme_dir):
+        """--theme-dir 下的新主题被发现并可加载。"""
+        self._write_theme(theme_dir, "my-brand", "My Brand", "#AABBCC")
+        set_theme_dir(theme_dir)
+        ids = [t["id"] for t in list_themes()]
+        assert "my-brand" in ids
+        assert load_theme("my-brand") != ""
+        assert "My Brand" in load_theme("my-brand")
+
+    def test_extra_theme_overrides_packaged(self, theme_dir):
+        """同 id 主题：--theme-dir 覆盖包内。"""
+        self._write_theme(theme_dir, "midnight-ops", "Override Ops", "#FF0000")
+        set_theme_dir(theme_dir)
+        # list_themes 取覆盖项的 name
+        names = {t["id"]: t["name"] for t in list_themes()}
+        assert names["midnight-ops"] == "Override Ops"
+        # load_theme 取覆盖项正文
+        body = load_theme("midnight-ops")
+        assert "Override Ops" in body
+        assert "Midnight Ops" not in body  # 包内原 name 已被覆盖
+
+    def test_clear_theme_dir_restores_packaged(self, theme_dir):
+        """清除 --theme-dir 后恢复包内主题。"""
+        self._write_theme(theme_dir, "midnight-ops", "Override Ops", "#FF0000")
+        set_theme_dir(theme_dir)
+        assert load_theme("midnight-ops").count("Override Ops") >= 1
+        set_theme_dir(None)
+        assert "Midnight Ops" in load_theme("midnight-ops")
