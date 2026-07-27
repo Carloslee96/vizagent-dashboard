@@ -401,6 +401,12 @@ def _echo_report(report: dict[str, Any]) -> None:
 
 
 def main() -> None:
+    # Windows GBK 控制台打印中文路径/列名会乱码甚至崩，强制 UTF-8 输出
+    import contextlib
+
+    with contextlib.suppress(Exception):
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     cli()
 
 
